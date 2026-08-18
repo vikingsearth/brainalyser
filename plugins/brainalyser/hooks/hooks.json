@@ -1,0 +1,29 @@
+{
+  "description": "Two sensors that make an agent consult the knowledge bundle instead of guessing about the user's own repos, projects, people and quests. SessionStart announces the bundle and states the recall trigger; UserPromptSubmit greps the bundle for entities named in the prompt and injects the matching lines. Both emit context only - neither returns a permission decision, and neither writes to the bundle. Both locate the bundle via BRAIN_REPO (default $HOME/dev/myMemory) and exit silently when it is absent.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "timeout": 10,
+            "statusMessage": "Loading brain context"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-brain-lookup.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking brain"
+          }
+        ]
+      }
+    ]
+  }
+}

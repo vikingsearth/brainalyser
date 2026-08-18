@@ -1,0 +1,19 @@
+{
+  "name": "brainalyser",
+  "version": "0.2.0",
+  "description": "A shared brain your agent reads before answering and writes to after learning - recall/capture skills, cold-start init and backfill, the OKF toolchain, and two hooks that make an agent consult the bundle before making claims. Ships no knowledge itself; the bundle stays a separate git clone located via BRAIN_REPO.",
+  "author": {
+    "name": "Wikus Bergh"
+  },
+  "keywords": [
+    "brain",
+    "memory",
+    "okf",
+    "knowledge",
+    "recall",
+    "second-brain"
+  ],
+  "skills": [
+    "./skills/"
+  ]
+}

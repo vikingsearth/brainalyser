@@ -1,0 +1,11 @@
+vendored from github.com/scaccogatto/okf-skills @ b33329bf87b594117833997fbeca48daa7b26e40 on 2026-08-11
+  (upstream 0.6.0 - first release targeting OKF v0.2; previously b8d9b1a2 on 2026-07-21, which was v0.1)
+  upstream layout moved to skills/<name>/, mapped 1:1 onto plugins/brainalyser/skills/<name>/
+  (these skills lived at .claude/skills/<name>/ when first vendored; re-vendor into the plugin)
+  reference/SPEC.md is the canonical Google spec at knowledge-catalog @ 3fcbb9f8 (OKF v0.2), plus a vendoring header
+
+local patch (re-applied 2026-08-11, visualize/scripts/okf_visualize.py): layout tuning -
+nodeRepulsion 9000->400000, idealEdgeLength 90->120, min-zoomed-font-size 6->8
+(dense-bundle declutter, 3 call sites for the first two). Re-apply on re-vendor.
+
+not vendored from upstream, ours to keep: LICENSE (x3), NOTICE, this file.
