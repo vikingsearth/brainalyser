@@ -87,9 +87,15 @@ Each subprocess is deliberately minimal:
 
 ```
 claude -p --safe-mode --no-session-persistence \
-       --model sonnet --effort low \
+       --model "$BACKFILL_MODEL" --effort "$BACKFILL_EFFORT" \
        --output-format json
 ```
+
+Defaults are `sonnet` / `low`, overridable per run. Valid effort levels are exactly
+`low`, `medium`, `high`, `xhigh`, `max` - the script rejects anything else rather than
+letting the CLI fail N times. If a trial run under-extracts (few facts from a rich
+transcript), raise to `medium` before reaching for a bigger model; extraction is
+recall-bound, not reasoning-bound.
 
 - `--safe-mode` disables hooks, plugins, skills and CLAUDE.md for the child. Without it
   every extraction pays for the SessionStart brain injection and re-greps the bundle -

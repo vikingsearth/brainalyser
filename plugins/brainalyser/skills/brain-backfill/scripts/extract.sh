@@ -8,7 +8,14 @@ STATE="$BRAIN_REPO/.claude/state"
 MANIFEST="$STATE/backfill-manifest.json"
 OUT="$STATE/backfill-candidates"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIMIT="${BACKFILL_LIMIT:-0}"          # 0 = no ceiling
+LIMIT="${BACKFILL_LIMIT:-0}"            # 0 = no ceiling
+MODEL="${BACKFILL_MODEL:-sonnet}"       # alias or full model name
+EFFORT="${BACKFILL_EFFORT:-low}"        # low | medium | high | xhigh | max
+
+case "$EFFORT" in
+  low|medium|high|xhigh|max) ;;
+  *) echo "BACKFILL_EFFORT must be one of: low medium high xhigh max (got '$EFFORT')" >&2; exit 2 ;;
+esac
 
 [ -f "$MANIFEST" ] || { echo "no manifest at $MANIFEST - run discover-all.sh first" >&2; exit 1; }
 command -v claude >/dev/null || { echo "claude CLI not on PATH" >&2; exit 1; }
@@ -51,14 +58,14 @@ PY
     echo "budget ceiling ($LIMIT) reached - manifest left resumable" >&2; break
   fi
   run_n=$((run_n+1))
-  echo "[$run_n/$total] $id  $(basename "$path")" >&2
+  echo "[$run_n/$total] $id  $(basename "$path")  ($MODEL/$EFFORT)" >&2
 
   body=$(uv run "$HERE/trim-transcript.py" "$path" 2>/dev/null)
   if [ -z "$body" ]; then
     status="failed"; reason="empty after trim"
   else
     if printf '%s' "$body" | claude -p --safe-mode --no-session-persistence \
-         --model sonnet --effort low --output-format json \
+         --model "$MODEL" --effort "$EFFORT" --output-format json \
          --system-prompt "$SYS" > "$OUT/$id.json" 2>"$OUT/$id.err"; then
       status="done"; reason=""
     else
