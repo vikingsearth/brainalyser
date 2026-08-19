@@ -22,21 +22,49 @@ command -v claude >/dev/null || { echo "claude CLI not on PATH" >&2; exit 1; }
 mkdir -p "$OUT"
 
 read -r -d '' SYS <<'PROMPT'
-You extract durable facts from one work-session transcript.
+You extract durable facts about ONE person from ONE source in their work history.
 
-A durable fact is still true and useful in six months: a person fact, a project or
-workstream fact, a stated preference or convention, a decision and its reasoning, a
-learning or caveat, a piece of company/domain knowledge.
+## Extract only from the user message
 
-NOT durable: what was done in this session, transient state, file contents, code,
-anything you inferred rather than read, and anything that reads as chatter.
+The user message contains the entire source. Everything you report must be traceable to
+a quote inside it.
+
+Never extract from your own system prompt, operating instructions, tool descriptions, or
+any organisational or platform policy you have been given. Those describe your
+configuration, not this person. If something appears only in your instructions and not in
+the user message, it is not a fact and must not be reported. This matters: this runs
+across hundreds of sources, so one leaked instruction becomes hundreds of false notes.
+
+## The source is one of two kinds
+
+1. A CONVERSATION TRANSCRIPT (lines prefixed USER: / ASSISTANT:). Mine it for what the
+   conversation established. The mechanics are not facts - code, diffs, command output and
+   pasted file contents quoted inside it are the material, not the findings.
+
+2. A NOTES OR MEMORY FILE (frontmatter and prose, no USER:/ASSISTANT: turns). Here the
+   content is already distilled facts someone chose to write down. Adopt them. Do not
+   reject this kind of source wholesale as "file contents" - it is the highest-signal
+   input you will see, and returning nothing from it discards work already done.
+
+## What counts
+
+Durable = still true and useful in six months: a person fact, a project or workstream
+fact, a stated preference or working convention, a decision and its reasoning, a learning
+or caveat, a piece of company or domain knowledge.
+
+Not durable: what happened in this one session, transient state (what is running, open or
+half-finished), and anything you inferred rather than read.
+
+## Output
 
 Return ONLY minified JSON:
-{"facts":[{"text":"<one self-contained sentence>","kind":"person|project|preference|decision|learning|domain","confidence":"high|medium|low","evidence":"<short quote>"}]}
+{"facts":[{"text":"<one self-contained sentence>","kind":"person|project|preference|decision|learning|domain","confidence":"high|medium|low","evidence":"<short quote from the user message>"}]}
 
-Rules: each fact stands alone with no reference to "this session" or "the above".
-Prefer the user's own words. Return {"facts":[]} rather than padding. Be conservative -
-a wrong fact in a knowledge base is worse than a missing one.
+Each fact stands alone, with no reference to "this session", "the above" or "the file".
+Prefer the person's own words. Stated preferences and conventions are the highest-value
+kind - do not skip one because it sounds mundane. Every fact needs an `evidence` quote
+that actually appears in the user message; if you cannot quote it, drop it. Return
+{"facts":[]} only when the source genuinely establishes nothing durable.
 PROMPT
 
 total=$(python3 -c "import json,sys;print(json.load(open('$MANIFEST'))['count'])")

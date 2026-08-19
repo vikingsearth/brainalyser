@@ -91,6 +91,18 @@ claude -p --safe-mode --no-session-persistence \
        --output-format json
 ```
 
+Two things the first end-to-end run established, both worth not re-learning:
+
+- **`low` is the right default.** On a source that extracted nothing, `medium` also
+  extracted nothing and cost 6x more. Under-extraction was a prompt fault, not an
+  effort fault - raise effort only after ruling the prompt out.
+- **The extractor must be scoped to the user message, and every fact needs an
+  `evidence` quote.** `--safe-mode` still delivers admin/policy instructions to the
+  child, and an unscoped prompt happily mined those and reported them as facts about
+  the user (org hosting rules, commit-trailer policy). Across hundreds of sources that
+  is hundreds of false notes. The shipped prompt forbids extracting from its own
+  instructions and drops any fact whose quote is not in the source.
+
 Defaults are `sonnet` / `low`, overridable per run. Valid effort levels are exactly
 `low`, `medium`, `high`, `xhigh`, `max` - the script rejects anything else rather than
 letting the CLI fail N times. If a trial run under-extracts (few facts from a rich
@@ -160,6 +172,9 @@ Then delete the candidates directory - the manifest stays as the record.
 - **Interrupted** - expected. Re-run; the manifest resumes. Say how many remain.
 - **`claude` not on PATH** - stop with the fix; do not fall back to in-session extraction
   of hundreds of transcripts, which will blow the context window.
+- **A source that yields zero facts** - check the prompt before the effort level. Notes
+  and memory files are a different shape from transcripts and an over-strict exclusion
+  list rejects them wholesale.
 - **Huge transcript** - `trim-transcript.py` truncates to a head+tail window and notes the
   truncation in the candidate file rather than failing the item.
 - **A brain that already has content** - fine, but dedup against existing notes in step 4,
