@@ -69,6 +69,19 @@ plugin later without changing anything you have written.
 Both emit context only. Neither writes to your bundle, and neither returns a permission
 decision. This is what makes recall automatic rather than something you have to ask for.
 
+## Routines
+
+| routine | cadence | does |
+| --- | --- | --- |
+| `daily-brain-sweep` | daily | harvests what the day's sessions produced, via `brain-sweep` |
+| `weekly-brain-validity` | Monday | conformance lint plus drift audit, written to `inbox/` for you to review |
+
+Without these, the brain only grows when you remember to say "log this". Claude Code
+discovers scheduled tasks only under `~/.claude/scheduled-tasks/`, so these cannot install
+themselves with the plugin - the prompts ship in `plugins/brainalyser/routines/` and get
+copied across. `brain-init` offers to do it; [routines/README.md](plugins/brainalyser/routines/README.md)
+has the manual steps and the cron lines.
+
 ## Configuration
 
 `BRAIN_REPO` points at the git repo holding your brain, defaulting to

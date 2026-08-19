@@ -35,6 +35,17 @@ When no bundle is found, the SessionStart hook says so and instructs the agent t
 
 `okf`, `validate` and `visualize` are vendored upstream code (MIT, scaccogatto/okf-skills) - re-vendor rather than hand-edit; provenance in `skills/okf/VENDORED`.
 
+## Routines
+
+Two scheduled runs, both thin prompts over the skills above:
+
+| routine | cadence | invokes |
+| --- | --- | --- |
+| `daily-brain-sweep` | daily | `brain-sweep` |
+| `weekly-brain-validity` | Monday | `brain-validity` |
+
+Claude Code discovers scheduled tasks only under `~/.claude/scheduled-tasks/` - there is no plugin manifest key for them - so the prompts ship in `routines/` and get **copied** to the user's config directory. `brain-init` offers this; [routines/README.md](routines/README.md) has the manual steps and the cron lines. The copy is a snapshot: a plugin update does not refresh it.
+
 ## Hooks
 
 | hook | fires | does |

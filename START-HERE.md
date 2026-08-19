@@ -55,7 +55,22 @@ wrong wastes their time on instructions that cannot work where they are.
    structure around their answers. Let it do that - do not pre-empt it with a layout
    you invented.
 
-5. If they have existing Claude Code history worth importing, mention `brain-backfill`
+5. **Make sure the two routines got installed.** `brain-init` offers this, but do not
+   assume it happened - check `~/.claude/scheduled-tasks/` for `daily-brain-sweep` and
+   `weekly-brain-validity`, and install them if they are missing:
+
+   ```bash
+   ls ~/.claude/scheduled-tasks/
+   ```
+
+   This is the step that decides whether their brain is alive or a folder they forget.
+   Without the routines it only grows when they remember to say "log this", and nothing
+   ever audits it. They are unlikely to ask for this, because they do not yet know it is
+   a thing - so it is on you to raise it. The install steps and the cron lines are in
+   [`plugins/brainalyser/routines/README.md`](plugins/brainalyser/routines/README.md).
+   Say what each one does in one sentence each and let them decline; do not lecture.
+
+6. If they have existing Claude Code history worth importing, mention `brain-backfill`
    afterwards. Do not run it unprompted: it is a long job, and it is not what they asked
    for.
 
@@ -112,5 +127,8 @@ it is true.
   "my" later, and the gap is invisible until it bites.
 - **Do not mark anything as verified that you inferred.** An honest unverified note is
   fine; a confident wrong one poisons everything downstream.
+- **A brain with no routines is a folder they will forget.** On Path A, do not call the
+  setup finished until the daily sweep and the weekly audit are scheduled, or they have
+  actively said no to them.
 - **Finish by telling them the one next action**, which is usually: *"just talk to me
   normally - I will capture as we go."*

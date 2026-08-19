@@ -99,6 +99,22 @@ and not its owner cannot resolve "I" or "my", and that gap is invisible until it
 - Tell them to set `BRAIN_REPO` if the bundle is not at the default path, and show the
   exact export line for their shell.
 - Confirm the SessionStart hook picks the bundle up - the next session should announce it.
+- **Offer the two routines.** Without them the brain only grows when the user
+  remembers to say so, and drifts unaudited. Claude Code discovers scheduled tasks
+  only under `~/.claude/scheduled-tasks/`, so a plugin cannot register them - copy
+  the shipped prompts across:
+
+  ```bash
+  for r in daily-brain-sweep weekly-brain-validity; do
+    mkdir -p "$HOME/.claude/scheduled-tasks/$r"
+    cp "$CLAUDE_PLUGIN_ROOT/routines/$r/SKILL.md" "$HOME/.claude/scheduled-tasks/$r/SKILL.md"
+  done
+  ```
+
+  Copying makes the tasks discoverable; it does not schedule them. Set the cadence
+  too - `0 8 * * *` for the sweep, `0 8 * * 1` for the validity check, local time -
+  and use a permission mode that will not stall an unattended run on a prompt.
+  Details in [routines/README.md](../../routines/README.md).
 - Offer `brain-backfill` if they have existing material worth pulling in.
 
 ### 7. Validate and commit
