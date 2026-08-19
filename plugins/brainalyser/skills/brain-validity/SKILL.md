@@ -73,6 +73,28 @@ the missing concept or fixing a typo'd path, not as failures.
   - a stale note whose `verified` is recent is a *specific and useful* signal:
     the content was confirmed but the commitment lapsed. Say so rather than
     lumping it in with never-verified notes.
+- **Win attribution and owed notes (mechanical - run this, don't eyeball it)**:
+  `uv run plugins/brainalyser/skills/brain/scripts/wins_by_stream.py brain --orphans`
+  from the repo root. It inverts the `Serves:` links into a per-stream roll-up.
+  This is the only place the win->workstream join exists, so a gap here is
+  invisible everywhere else. Report:
+  - **unattributed** entries (no `Serves:` at all, or a malformed one): the fix
+    is to name the quest/project/goal the win advanced, or write `Serves: none`
+    if it advanced nothing tracked. Propose the target; never guess silently.
+  - **`Serves: none` count**: a recorded judgement, not a gap - report the number
+    without proposing changes, but look at any entry where the prose plainly
+    names a live quest the field says it served nothing.
+  - **large wins owing a concept note** (`**large** (note owed)` with no note
+    beside the log): the note is the promo-case artifact, so an owed one that has
+    sat for more than a couple of weeks is the finding.
+  - **a live quest or project with zero attributed wins**: either the work
+    produced nothing loggable (worth knowing) or wins are landing without the
+    link. Cross-check its `log.md` activity before deciding which.
+  - **zero large wins over a long window**: read this as a sizing-discipline
+    signal, not a fact about the work. Sizes track outcome, not effort, and the
+    smaller-when-unsure tiebreak biases down - if a period of shipped, adopted
+    work shows `l0`, the plausible finding is that large wins are being logged
+    as medium, and the entries to re-read are the ones others now depend on.
 - **Learning decay**: learnings with `confidence: hunch` older than 60 days ->
   flag "confirm or prune". Learnings referencing retired tools or superseded
   facts -> flag for an in-place correction + log entry. Cross-check against the
@@ -80,11 +102,6 @@ the missing concept or fixing a typo'd path, not as failures.
   verified, or whose newest `verified.at` is over a year old, is worth a look -
   `confidence` is how strong the claim is, `verified` is who last checked it, and
   a large gap between the two is the interesting case.
-- **Portfolio vs brain preference drift**: compare
-  `~/.claude/portfolio/preferences-and-constraints.md` and
-  `~/.claude/portfolio/communication-style.md` against
-  `brain/preferences/*.md`. Flag preferences that exist in one but not the
-  other, or that materially differ (the brain and portfolio must agree).
 - **Index drift**: directory contents vs the directory's `index.md` - missing
   entries, entries for deleted files, stale descriptions.
 - **Stale concepts**: notes embodying ideas/systems the user has retired
@@ -189,6 +206,9 @@ plugin root instead - `~/.claude/plugins/cache/<marketplace>/brainalyser/<versio
   mechanical half: §5.5 staleness + §5.3 trust tiers under the shared policy.
   The daily sweep runs the same script, so a finding here is never a
   disagreement about policy, only about what to do next
+- `plugins/brainalyser/skills/brain/scripts/wins_by_stream.py` - the win->workstream
+  join, derived from `Serves:` links and stored nowhere. `--orphans` lists the
+  unattributed, the `Serves: none`, and any large win still owing its concept note
 - `inbox/` (repo root) - where reports land
 - `plugins/brainalyser/skills/brain/SKILL.md` - the capture flow that acts on
   approved findings later
