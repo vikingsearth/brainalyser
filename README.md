@@ -15,6 +15,19 @@ repo, located via `BRAIN_REPO`.
 
 ## Start here
 
+**Fastest path - let your AI do it.** Send someone this and nothing else:
+
+> Look at this repo: https://github.com/vikingsearth/brainalyser
+> Read START-HERE.md and follow it to set me up with a second brain.
+
+[`START-HERE.md`](START-HERE.md) is addressed to the agent rather than the human. It
+works out whether it can run commands, then takes the right path - installing the plugin,
+or running the interview in-chat and asking for the single manual step it cannot do
+itself. No prior knowledge needed on the human's side.
+
+The manual routes, if you prefer them:
+
+
 **In Claude Code** - install the plugin, then run `/brain-init`:
 
 ```
