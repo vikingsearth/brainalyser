@@ -44,6 +44,12 @@ around your answers. There is no default taxonomy to adopt.
 custom instructions. Same format, same rules, done by hand. You can upgrade to the
 plugin later without changing anything you have written.
 
+## The talk
+
+There is a ready-made explanation of all this in [`docs/`](docs/) - an 11-slide deck plus
+per-slide talking points, from an internal session. Open the HTML in any browser. Borrow
+it, or lift the parts that help.
+
 ## Skills
 
 | skill | does |

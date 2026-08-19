@@ -1,0 +1,1670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared Brain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* primary palette */
+    --cobalt: #004FFF;
+    --midnight: #002463;
+    --aqua: #00FFFF;
+    /* secondary - cobalt shades */
+    --cobalt-light: #5BB6FC;
+    --cobalt-lighter: #A3BBFE;
+    --cobalt-lightest: #E7EDFF;
+    /* secondary - midnight shades */
+    --midnight-light: #516691;
+    --midnight-lighter: #8E9CD7;
+    /* secondary - aqua shades */
+    --aqua-light: #71FDFE;
+    --aqua-lighter: #C0FFFF;
+    /* deck ink */
+    --body: #C9D8FF;
+    --dim: #8E9CD7;
+
+    --font: "Montserrat", "Roboto", sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #050B1C;
+    font-family: var(--font);
+    overflow: hidden;
+  }
+
+  /* fixed 16:9 stage, scaled to fit the window */
+  .stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1280px;
+    height: 720px;
+    transform-origin: center center;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 30px 90px rgba(0,0,0,.6);
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 84px 96px;
+    overflow: hidden;
+    color: var(--body);
+    background-color: var(--midnight);
+    background-image:
+      radial-gradient(900px 620px at 86% 8%,  rgba(11,58,168,.85) 0%, transparent 64%),
+      radial-gradient(700px 520px at 6% 96%,  rgba(0,79,255,.28)  0%, transparent 62%),
+      linear-gradient(140deg, #001A4A 0%, #002463 46%, #000E2C 100%);
+  }
+  .slide.active { display: flex; }
+
+  /* ---------- geometric accents: blue shades only ---------- */
+  .accent { position: absolute; pointer-events: none; }
+
+  .a1 {   /* large outlined diamond, top right */
+    width: 300px; height: 300px;
+    right: -76px; top: -96px;
+    border: 2px solid var(--cobalt-light);
+    opacity: .34;
+    transform: rotate(24deg);
+  }
+  .a2 {   /* solid diamond, bottom right */
+    width: 168px; height: 168px;
+    right: 118px; bottom: -62px;
+    background: var(--cobalt);
+    opacity: .42;
+    transform: rotate(24deg);
+  }
+  .a3 {   /* soft wedge, bottom left */
+    width: 0; height: 0;
+    left: -38px; bottom: 64px;
+    border-left: 88px solid transparent;
+    border-bottom: 148px solid var(--midnight-lighter);
+    opacity: .16;
+  }
+  .a4 {   /* small outlined diamond, mid right */
+    width: 92px; height: 92px;
+    right: 250px; bottom: 92px;
+    border: 2px solid var(--aqua);
+    opacity: .22;
+    transform: rotate(24deg);
+  }
+
+  /* ---------- cover ---------- */
+  .cover { justify-content: flex-start; padding-top: 74px; align-items: center; }
+  .cover h1 {
+    font-size: 76px;
+    font-weight: 300;
+    letter-spacing: .5px;
+    line-height: 1.04;
+    color: #fff;
+    text-align: center;
+  }
+  .cover .rule {
+    width: 88px; height: 3px;
+    background: var(--aqua);
+    margin: 22px 0 20px;
+  }
+  .cover .sub {
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--body);
+    text-align: center;
+    letter-spacing: .2px;
+  }
+  .eye { font-size: 1.3em; display: inline-block; vertical-align: -.16em; margin: 0 3px; }
+  .eye.flip { transform: scaleX(-1); }
+
+  .cover .art { margin-top: 12px; }
+  .cover .art svg { display: block; width: 470px; height: auto; }
+
+  /* ---------- section divider ---------- */
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 3.4px;
+    text-transform: uppercase;
+    color: var(--aqua);
+    margin-bottom: 20px;
+  }
+  .section h2 {
+    font-size: 62px;
+    font-weight: 300;
+    letter-spacing: .4px;
+    line-height: 1.06;
+    color: #fff;
+    max-width: 840px;
+  }
+  .section p {
+    margin-top: 22px;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--dim);
+    max-width: 720px;
+  }
+
+  /* ---------- content ---------- */
+  .title {
+    font-size: 50px;
+    font-weight: 300;
+    letter-spacing: .3px;
+    line-height: 1.08;
+    color: #fff;
+  }
+  .trule {
+    width: 64px; height: 3px;
+    background: var(--aqua);
+    margin: 20px 0 38px;
+  }
+
+  /* okf slide: code sample top right, interactive tree along the bottom */
+  .okf-slide { justify-content: flex-start; padding-top: 52px; }
+  .okf-top { display: flex; align-items: flex-start; gap: 44px; width: 100%; }
+  .okf-head { flex: 1 1 auto; min-width: 0; }
+
+  .codecard {
+    flex: 0 0 574px;
+    border: 1px solid rgba(91,182,252,.24);
+    border-radius: 12px;
+    background: rgba(0,10,32,.66);
+    overflow: hidden;
+  }
+  .codecard .path {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--midnight-lighter);
+    padding: 9px 18px;
+    border-bottom: 1px solid rgba(91,182,252,.18);
+    background: rgba(0,79,255,.09);
+  }
+  .codecard pre {
+    margin: 0;
+    padding: 15px 18px 17px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.52;
+    color: var(--dim);
+    white-space: pre;
+  }
+  .c-del  { color: #516691; }
+  .c-key  { color: #5BB6FC; }
+  .c-val  { color: #C9D8FF; }
+  .c-head  { color: #00FFFF; }
+  .c-req   { color: #00FFFF; }
+  .c-prov  { color: #A3BBFE; }
+  .c-trust { color: #C79BFF; }
+  .c-src   { color: #7CE8A0; }
+
+  .visual .art.xl svg { width: 900px; max-width: 100%; }
+  .visual .art.tall svg { width: 424px; max-width: 100%; }
+
+  /* how-slide: agent shifted left, neon prompt card to its right */
+  .howrow {
+    display: flex;
+    align-items: center;
+    gap: 44px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .howrow .art { margin: 0; flex: 0 0 auto; }
+  .howrow .art.howart svg { width: 292px; height: auto; display: block; }
+  .promptcard {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 3px solid #00FFFF;
+    border-radius: 18px;
+    background: rgba(0,20,44,.62);
+    padding: 26px 30px;
+    box-shadow:
+      0 0 0 1px rgba(0,255,255,.35),
+      0 0 22px rgba(0,255,255,.45),
+      inset 0 0 26px rgba(0,255,255,.12);
+  }
+  .promptcard .pc-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #00FFFF;
+    margin-bottom: 16px;
+  }
+  .promptcard pre {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.95;
+    color: #E7FEFF;
+    white-space: pre;          /* exactly two lines, never wrapped */
+    overflow-x: auto;
+    background: rgba(0,8,24,.5);
+    border: 1px solid rgba(0,255,255,.2);
+    border-radius: 10px;
+    padding: 15px 18px;
+  }
+  .promptcard pre .url { color: #71FDFE; }
+  .promptcard a, .promptcard .url { color: #71FDFE; text-decoration: none; }
+
+  /* root-dirs slide: scattered, rotated, coloured boxes */
+  .scatter { position: absolute; inset: 0; pointer-events: none; }
+  .chip {
+    position: absolute;
+    padding: 13px 26px;
+    border: 3px solid var(--c);
+    border-radius: 12px;
+    background: rgba(0,10,32,.58);
+    box-shadow: 0 12px 30px rgba(0,0,0,.34);
+    color: var(--c);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    white-space: nowrap;
+  }
+
+  /* frontmatter slide: one wide code card under the title */
+  .fm-slide { justify-content: flex-start; padding-top: 50px; }
+  .codecard.wide { flex: none; width: 100%; max-width: 812px; }
+  .codecard.wide pre { font-size: 14px; line-height: 1.54; }
+
+  /* left-to-right interactive tree */
+  .tree {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    margin-top: 30px;
+    min-height: 250px;
+  }
+  .tlines {
+    position: absolute;
+    left: 0; top: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .tcol { display: none; flex-direction: column; gap: 10px; }
+  .tcol.root, .tcol.open { display: flex; }
+
+  .node {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: rgba(255,255,255,.035);
+    font-family: var(--font);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: var(--body);
+  }
+  button.node { cursor: pointer; transition: background .16s ease, border-color .16s ease; }
+  button.node:hover { background: rgba(91,182,252,.16); }
+  button.node:focus-visible { outline: 2px solid var(--aqua); outline-offset: 2px; }
+
+  .node.root { color: var(--aqua); border-color: var(--aqua); background: rgba(0,255,255,.07); }
+  .node.branch { border-color: rgba(91,182,252,.55); color: #DCE6FF; }
+  .node.dir { color: var(--cobalt-lighter); border-color: rgba(163,187,254,.26); }
+  .node.file {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: #7CE8A0;
+    border-color: rgba(124,232,160,.3);
+  }
+
+  .chev {
+    width: 0; height: 0;
+    border-left: 6px solid currentColor;
+    border-top: 4.5px solid transparent;
+    border-bottom: 4.5px solid transparent;
+    transition: transform .18s ease;
+  }
+  .node.is-open .chev { transform: rotate(90deg); }
+
+  .treehint {
+    position: absolute;
+    right: 96px; bottom: 56px;
+    font-size: 12px;
+    letter-spacing: 1.4px;
+    color: rgba(201,216,255,.4);
+  }
+
+  /* section slide with a quadrant box to the right of the title */
+  .section-split .row {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    width: 100%;
+  }
+  .section-split .left { flex: 1 1 auto; min-width: 0; }
+  .quad {
+    flex: 0 0 380px;
+    width: 380px;
+    height: 380px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .q {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    border: 6px solid;
+  }
+  .q-okf { color: #FF4D5E; border-color: #FF2D40; border-radius: 24px 0 0 0; }
+  .q-fm  { color: #3D8BFF; border-color: #1E6BFF; border-radius: 0 24px 0 0; }
+  .q-idx { color: #22DD6E; border-color: #00CC55; border-radius: 0 0 0 24px; }
+  .q-log { color: #FFD11A; border-color: #FFC400; border-radius: 0 0 24px 0; }
+
+  /* split slide: two illustrations either side of a centre divider */
+  .split-slide { justify-content: flex-start; padding-top: 62px; }
+  .split-slide .trule { margin-bottom: 14px; }
+  .split {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    padding-bottom: 26px;
+  }
+  .split .col {
+    flex: 1 1 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+  }
+  .split .col svg { display: block; width: 100%; max-width: 436px; height: auto; }
+  .col.stack { flex-direction: column; gap: 16px; }
+  .cap {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .6px;
+    color: rgba(201,216,255,.62);
+    text-align: center;
+  }
+  .cap b { font-weight: 600; color: #DCE6FF; }
+
+  .hdivider {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right,
+      transparent 0%,
+      rgba(91,182,252,.55) 13%,
+      rgba(91,182,252,.55) 87%,
+      transparent 100%);
+  }
+  .hdivider::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 13px; height: 13px;
+    transform: translate(-50%, -50%) rotate(24deg);
+    background: var(--aqua);
+    box-shadow: 0 0 14px rgba(0,255,255,.55);
+  }
+
+  /* three-approach slide: two examples above the divider, "yours" below */
+  .tri-slide { justify-content: flex-start; padding-top: 46px; }
+  .tri-slide .title { font-size: 44px; }
+  .tri-slide .trule { margin: 14px 0 0; }
+  .tri-slide .split { flex: 0 0 auto; min-height: 0; padding-bottom: 0; margin-top: 18px; }
+  .tri-slide .split .col svg { max-width: 356px; }
+  .tri-slide .split .col.stack { gap: 12px; }
+  .tri-slide .hdivider { margin: 18px 0; }
+  .tri-slide .third {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .tri-slide .third svg { display: block; width: 300px; height: auto; }
+
+  .divider {
+    position: relative;
+    flex: 0 0 2px;
+    align-self: stretch;
+    margin: 8px 30px;
+    background: linear-gradient(to bottom,
+      transparent 0%,
+      rgba(91,182,252,.55) 16%,
+      rgba(91,182,252,.55) 84%,
+      transparent 100%);
+  }
+  .divider::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 13px; height: 13px;
+    transform: translate(-50%, -50%) rotate(24deg);
+    background: var(--aqua);
+    box-shadow: 0 0 14px rgba(0,255,255,.55);
+  }
+
+  /* visual slide: title top-left, illustration centred below */
+  .visual { justify-content: flex-start; padding-top: 70px; }
+  .visual .trule { margin-bottom: 8px; }
+  .visual .art { margin: 0 auto; }
+  .visual .art svg { display: block; width: 720px; height: auto; }
+  .content ul, .closing ul { list-style: none; max-width: 880px; }
+  .content li, .closing li {
+    position: relative;
+    font-size: 27px;
+    font-weight: 300;
+    line-height: 1.42;
+    padding-left: 38px;
+    margin-bottom: 29px;
+  }
+  .content li:last-child, .closing li:last-child { margin-bottom: 0; }
+  .content li::before, .closing li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 15px;
+    width: 11px; height: 11px;
+    background: var(--cobalt-light);
+    transform: rotate(24deg);
+  }
+  .content code {
+    font-family: var(--mono);
+    font-size: .8em;
+    font-weight: 500;
+    color: var(--aqua-light);
+    white-space: nowrap;
+  }
+
+  /* ---------- closing ---------- */
+  .closing h2 {
+    font-size: 56px;
+    font-weight: 300;
+    letter-spacing: .4px;
+    line-height: 1.06;
+    color: #fff;
+    margin-bottom: 40px;
+  }
+  .closing li::before { background: var(--aqua); }
+
+  /* ---------- chrome ---------- */
+  .progress {
+    position: fixed;
+    left: 0; top: 0;
+    height: 3px;
+    background: var(--aqua);
+    z-index: 20;
+    transition: width .22s ease;
+  }
+  .counter {
+    position: absolute;
+    left: 96px; bottom: 58px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.8px;
+    color: var(--midnight-lighter);
+    opacity: .75;
+  }
+  .cover .counter { display: none; }
+
+  .hint {
+    position: fixed;
+    left: 50%; bottom: 16px;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 1.6px;
+    color: rgba(201,216,255,.34);
+    z-index: 20;
+    transition: opacity .6s ease;
+  }
+  .hint.gone { opacity: 0; }
+
+  /* ---------- print: one slide per landscape page ---------- */
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    html, body { overflow: visible; height: auto; background: #fff; }
+    .progress, .hint { display: none !important; }
+    .stage {
+      position: static;
+      transform: none !important;
+      width: auto; height: auto;
+      box-shadow: none;
+    }
+    .slide {
+      position: relative;
+      display: flex !important;
+      width: 1280px;
+      height: 720px;
+      break-after: page;
+      page-break-after: always;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="stage" id="stage">
+
+  <!-- 1. cover -->
+  <section class="slide cover">
+    <span class="accent a1"></span><span class="accent a2"></span><span class="accent a3"></span>
+    <h1>Shared Brain</h1>
+    <div class="rule"></div>
+    <p class="sub">How you and your agent can see&nbsp;<span class="eye flip">&#128064;</span>&nbsp;to&nbsp;<span class="eye">&#128064;</span></p>
+
+    <div class="art">
+      <svg viewBox="0 0 470 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A small AI robot playing with alphabet blocks">
+        <defs>
+          <linearGradient id="shell" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/>
+            <stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <linearGradient id="shell2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9D8FF"/>
+            <stop offset="1" stop-color="#8E9CD7"/>
+          </linearGradient>
+          <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#004FFF" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glow" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="4.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ambient halo + floor shadow -->
+        <ellipse cx="228" cy="196" rx="212" ry="132" fill="url(#halo)"/>
+        <ellipse cx="228" cy="296" rx="168" ry="17" fill="#000B22" opacity=".5"/>
+
+        <!-- blocks: stacked pair, right -->
+        <g>
+          <rect x="300" y="230" width="66" height="66" rx="9" fill="#004FFF"/>
+          <rect x="300" y="230" width="66" height="66" rx="9" fill="#fff" opacity=".07"/>
+          <text x="333" y="274" font-family="Montserrat, Roboto, sans-serif" font-size="34" font-weight="500" fill="#E7EDFF" text-anchor="middle">A</text>
+
+          <g transform="rotate(-5 341 197)">
+            <rect x="308" y="164" width="66" height="66" rx="9" fill="#71FDFE"/>
+            <rect x="308" y="164" width="66" height="66" rx="9" fill="#002463" opacity=".08"/>
+            <text x="341" y="208" font-family="Montserrat, Roboto, sans-serif" font-size="34" font-weight="500" fill="#002463" text-anchor="middle">I</text>
+          </g>
+        </g>
+
+        <!-- block: floor, left -->
+        <g transform="rotate(8 96 268)">
+          <rect x="68" y="240" width="56" height="56" rx="8" fill="#5BB6FC"/>
+          <rect x="68" y="240" width="56" height="56" rx="8" fill="#002463" opacity=".08"/>
+          <circle cx="96" cy="268" r="11" fill="none" stroke="#002463" stroke-width="3" opacity=".55"/>
+          <circle cx="96" cy="268" r="3.5" fill="#002463" opacity=".55"/>
+        </g>
+
+        <!-- robot -->
+        <g>
+          <!-- antenna -->
+          <path d="M196 56 v-22" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="196" cy="26" r="9" fill="#00FFFF" filter="url(#glow)"/>
+
+          <!-- side units -->
+          <circle cx="124" cy="120" r="13" fill="#004FFF"/>
+          <circle cx="268" cy="120" r="13" fill="#004FFF"/>
+
+          <!-- arms: left down to floor block, right up to the stack -->
+          <path d="M148 196 C 122 216, 110 240, 108 256" stroke="url(#shell2)" stroke-width="19" stroke-linecap="round" fill="none"/>
+          <path d="M244 190 C 274 182, 292 190, 302 200" stroke="url(#shell2)" stroke-width="19" stroke-linecap="round" fill="none"/>
+
+          <!-- legs + feet -->
+          <rect x="164" y="228" width="26" height="38" rx="13" fill="url(#shell2)"/>
+          <rect x="202" y="228" width="26" height="38" rx="13" fill="url(#shell2)"/>
+          <ellipse cx="167" cy="276" rx="27" ry="16" fill="url(#shell)"/>
+          <ellipse cx="225" cy="276" rx="27" ry="16" fill="url(#shell)"/>
+
+          <!-- body -->
+          <rect x="152" y="168" width="88" height="76" rx="27" fill="url(#shell)"/>
+          <rect x="176" y="192" width="40" height="22" rx="11" fill="#002463" opacity=".72"/>
+          <circle cx="187" cy="203" r="3.2" fill="#00FFFF"/>
+          <circle cx="196" cy="203" r="3.2" fill="#00FFFF" opacity=".6"/>
+          <circle cx="205" cy="203" r="3.2" fill="#00FFFF" opacity=".3"/>
+
+          <!-- head -->
+          <rect x="130" y="56" width="132" height="118" rx="38" fill="url(#shell)"/>
+          <rect x="146" y="78" width="100" height="72" rx="26" fill="#000E2C"/>
+          <!-- eyes -->
+          <circle cx="172" cy="112" r="10.5" fill="#00FFFF" filter="url(#glow)"/>
+          <circle cx="220" cy="112" r="10.5" fill="#00FFFF" filter="url(#glow)"/>
+          <circle cx="175" cy="109" r="3.4" fill="#fff"/>
+          <circle cx="223" cy="109" r="3.4" fill="#fff"/>
+          <!-- smile -->
+          <path d="M182 132 q14 11 28 0" stroke="#71FDFE" stroke-width="3.4" stroke-linecap="round" fill="none" opacity=".85"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide visual">
+    <span class="accent a1"></span><span class="accent a2"></span><span class="accent a4"></span>
+    <h2 class="title">The Problem</h2>
+    <div class="trule"></div>
+
+    <div class="art">
+      <svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A frustrated person shaking hands with a cheerful AI agent that says nice to meet you">
+        <defs>
+          <linearGradient id="shellB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/>
+            <stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <linearGradient id="shellB2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9D8FF"/>
+            <stop offset="1" stop-color="#8E9CD7"/>
+          </linearGradient>
+          <radialGradient id="haloB" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#004FFF" stop-opacity=".5"/>
+            <stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glowB" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="4.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <ellipse cx="380" cy="210" rx="336" ry="158" fill="url(#haloB)"/>
+        <ellipse cx="380" cy="352" rx="286" ry="18" fill="#000B22" opacity=".45"/>
+
+        <!-- speech bubble, tail pointing at the agent -->
+        <g>
+          <rect x="248" y="4" width="336" height="78" rx="26" fill="#E7EDFF"/>
+          <path d="M486 76 L526 76 L542 114 Z" fill="#E7EDFF"/>
+          <text x="416" y="52" font-family="Montserrat, Roboto, sans-serif" font-size="28" font-weight="500" fill="#002463" text-anchor="middle">Nice to meet you!</text>
+        </g>
+
+        <!-- human: frustrated -->
+        <g>
+          <rect x="126" y="222" width="98" height="122" rx="34" fill="#A3BBFE"/>
+          <rect x="164" y="206" width="22" height="24" fill="#C79A72"/>
+          <circle cx="174" cy="176" r="46" fill="#D9B48F"/>
+          <path d="M127 170 q4 -56 48 -56 q44 0 47 48 q-15 -24 -47 -24 q-35 0 -48 32 Z" fill="#172A4D"/>
+          <!-- furrowed brows: inner ends low -->
+          <path d="M150 165 L173 175" stroke="#1B2740" stroke-width="4.2" stroke-linecap="round"/>
+          <path d="M183 175 L206 165" stroke="#1B2740" stroke-width="4.2" stroke-linecap="round"/>
+          <ellipse cx="163" cy="187" rx="4" ry="5.6" fill="#1B2740"/>
+          <ellipse cx="193" cy="187" rx="4" ry="5.6" fill="#1B2740"/>
+          <!-- frown -->
+          <path d="M164 208 q14 -10 28 0" stroke="#1B2740" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+          <!-- sweat drop + tension marks -->
+          <path d="M219 146 q8 11 0 15 q-8 -4 0 -15 Z" fill="#71FDFE" opacity=".9"/>
+          <path d="M120 136 L131 129" stroke="#8E9CD7" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+          <path d="M113 152 L125 149" stroke="#8E9CD7" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+          <!-- arm to the handshake -->
+          <path d="M214 256 C 268 270, 312 270, 350 267" stroke="#A3BBFE" stroke-width="22" stroke-linecap="round" fill="none"/>
+        </g>
+
+        <!-- agent: happy -->
+        <g>
+          <path d="M579 128 v-24" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="579" cy="97" r="8.5" fill="#00FFFF" filter="url(#glowB)"/>
+          <circle cx="514" cy="186" r="12" fill="#004FFF"/>
+          <circle cx="644" cy="186" r="12" fill="#004FFF"/>
+          <!-- arm to the handshake -->
+          <path d="M540 266 C 492 278, 442 272, 406 267" stroke="url(#shellB2)" stroke-width="22" stroke-linecap="round" fill="none"/>
+          <rect x="546" y="310" width="24" height="32" rx="12" fill="url(#shellB2)"/>
+          <rect x="594" y="310" width="24" height="32" rx="12" fill="url(#shellB2)"/>
+          <ellipse cx="556" cy="337" rx="26" ry="15" fill="url(#shellB)"/>
+          <ellipse cx="608" cy="337" rx="26" ry="15" fill="url(#shellB)"/>
+          <rect x="536" y="228" width="90" height="82" rx="27" fill="url(#shellB)"/>
+          <rect x="560" y="256" width="42" height="22" rx="11" fill="#002463" opacity=".72"/>
+          <circle cx="571" cy="267" r="3.2" fill="#00FFFF"/>
+          <circle cx="581" cy="267" r="3.2" fill="#00FFFF" opacity=".6"/>
+          <circle cx="591" cy="267" r="3.2" fill="#00FFFF" opacity=".3"/>
+          <rect x="520" y="128" width="118" height="106" rx="34" fill="url(#shellB)"/>
+          <rect x="536" y="148" width="86" height="66" rx="24" fill="#000E2C"/>
+          <circle cx="560" cy="178" r="10" fill="#00FFFF" filter="url(#glowB)"/>
+          <circle cx="598" cy="178" r="10" fill="#00FFFF" filter="url(#glowB)"/>
+          <circle cx="563" cy="175" r="3.2" fill="#fff"/>
+          <circle cx="601" cy="175" r="3.2" fill="#fff"/>
+          <path d="M566 195 q13 13 26 0" stroke="#71FDFE" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+        </g>
+
+        <!-- clasped hands -->
+        <g>
+          <ellipse cx="381" cy="290" rx="48" ry="9" fill="#000B22" opacity=".3"/>
+          <rect x="336" y="247" width="54" height="38" rx="18" fill="#D9B48F"/>
+          <rect x="370" y="245" width="54" height="40" rx="19" fill="#E7EDFF"/>
+          <path d="M384 256 h16" stroke="#A3BBFE" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M384 265 h18" stroke="#A3BBFE" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M384 274 h16" stroke="#A3BBFE" stroke-width="2.8" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <div class="counter"></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide split-slide">
+    <span class="accent a1"></span><span class="accent a2"></span><span class="accent a3"></span>
+    <h2 class="title">Shared Brain</h2>
+    <div class="trule"></div>
+
+    <div class="split">
+      <!-- left: agent reading a table of contents off a clipboard -->
+      <div class="col">
+        <svg viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An AI agent holding a clipboard and reading a table of contents">
+          <defs>
+            <linearGradient id="shellC" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+            </linearGradient>
+            <linearGradient id="shellC2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+            </linearGradient>
+            <radialGradient id="haloC" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#004FFF" stop-opacity=".45"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glowC" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <ellipse cx="228" cy="180" rx="216" ry="152" fill="url(#haloC)"/>
+          <ellipse cx="150" cy="306" rx="118" ry="15" fill="#000B22" opacity=".45"/>
+
+          <!-- agent -->
+          <g>
+            <path d="M130 40 v-22" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="130" cy="12" r="8" fill="#00FFFF" filter="url(#glowC)"/>
+            <circle cx="64" cy="98" r="11" fill="#004FFF"/>
+            <circle cx="196" cy="98" r="11" fill="#004FFF"/>
+            <rect x="100" y="238" width="22" height="36" rx="11" fill="url(#shellC2)"/>
+            <rect x="142" y="238" width="22" height="36" rx="11" fill="url(#shellC2)"/>
+            <ellipse cx="106" cy="288" rx="25" ry="14" fill="url(#shellC)"/>
+            <ellipse cx="158" cy="288" rx="25" ry="14" fill="url(#shellC)"/>
+            <rect x="88" y="146" width="90" height="96" rx="28" fill="url(#shellC)"/>
+            <rect x="112" y="170" width="42" height="21" rx="10" fill="#002463" opacity=".72"/>
+            <circle cx="123" cy="180" r="3.1" fill="#00FFFF"/>
+            <circle cx="133" cy="180" r="3.1" fill="#00FFFF" opacity=".6"/>
+            <circle cx="143" cy="180" r="3.1" fill="#00FFFF" opacity=".3"/>
+            <!-- arm reaching toward the board -->
+            <path d="M176 192 C 204 200, 222 208, 240 216" stroke="url(#shellC2)" stroke-width="18" stroke-linecap="round" fill="none"/>
+            <!-- head, tilted down to read -->
+            <g transform="rotate(-8 130 92)">
+              <rect x="70" y="40" width="120" height="104" rx="34" fill="url(#shellC)"/>
+              <rect x="86" y="60" width="88" height="64" rx="24" fill="#000E2C"/>
+              <circle cx="112" cy="90" r="9.5" fill="#00FFFF" filter="url(#glowC)"/>
+              <circle cx="148" cy="90" r="9.5" fill="#00FFFF" filter="url(#glowC)"/>
+              <circle cx="116" cy="94" r="3" fill="#fff"/>
+              <circle cx="152" cy="94" r="3" fill="#fff"/>
+              <path d="M118 110 q12 9 24 0" stroke="#71FDFE" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"/>
+            </g>
+          </g>
+
+          <!-- clipboard with a table of contents -->
+          <g transform="rotate(-10 300 206)">
+            <rect x="232" y="112" width="150" height="192" rx="11" fill="#8E9CD7"/>
+            <rect x="232" y="112" width="150" height="192" rx="11" fill="#002463" opacity=".14"/>
+            <rect x="286" y="102" width="44" height="17" rx="5" fill="#516691"/>
+            <circle cx="308" cy="102" r="7" fill="#516691"/>
+            <rect x="244" y="128" width="126" height="164" rx="4" fill="#E7EDFF"/>
+            <!-- heading -->
+            <rect x="256" y="142" width="58" height="7" rx="3.5" fill="#002463"/>
+            <rect x="256" y="155" width="30" height="3" rx="1.5" fill="#00FFFF"/>
+            <!-- toc rows: label, dot leader, number -->
+            <g>
+              <rect x="256" y="174" width="52" height="5" rx="2.5" fill="#3E5480"/>
+              <path d="M314 177 H340" stroke="#8E9CD7" stroke-width="2" stroke-dasharray="2 3"/>
+              <rect x="346" y="174" width="12" height="5" rx="2.5" fill="#004FFF"/>
+
+              <rect x="262" y="196" width="42" height="5" rx="2.5" fill="#3E5480"/>
+              <path d="M310 199 H340" stroke="#8E9CD7" stroke-width="2" stroke-dasharray="2 3"/>
+              <rect x="346" y="196" width="12" height="5" rx="2.5" fill="#004FFF"/>
+
+              <rect x="256" y="218" width="60" height="5" rx="2.5" fill="#3E5480"/>
+              <path d="M322 221 H340" stroke="#8E9CD7" stroke-width="2" stroke-dasharray="2 3"/>
+              <rect x="346" y="218" width="12" height="5" rx="2.5" fill="#004FFF"/>
+
+              <rect x="262" y="240" width="38" height="5" rx="2.5" fill="#3E5480"/>
+              <path d="M306 243 H340" stroke="#8E9CD7" stroke-width="2" stroke-dasharray="2 3"/>
+              <rect x="346" y="240" width="12" height="5" rx="2.5" fill="#004FFF"/>
+
+              <rect x="256" y="262" width="48" height="5" rx="2.5" fill="#3E5480"/>
+              <path d="M310 265 H340" stroke="#8E9CD7" stroke-width="2" stroke-dasharray="2 3"/>
+              <rect x="346" y="262" width="12" height="5" rx="2.5" fill="#004FFF"/>
+            </g>
+          </g>
+
+          <!-- hand over the board edge, so it reads as held -->
+          <rect x="234" y="200" width="36" height="28" rx="14" fill="url(#shellC)" transform="rotate(-10 252 214)"/>
+        </svg>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- right: oversized agent head spilling multicoloured markdown -->
+      <div class="col">
+        <svg viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An AI agent with an oversized head, multicoloured markdown spilling out of it">
+          <defs>
+            <linearGradient id="shellD" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+            </linearGradient>
+            <radialGradient id="haloD" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#004FFF" stop-opacity=".45"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glowD" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="4.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <ellipse cx="230" cy="170" rx="222" ry="156" fill="url(#haloD)"/>
+          <ellipse cx="230" cy="348" rx="128" ry="11" fill="#000B22" opacity=".38"/>
+
+          <!-- oversized head -->
+          <path d="M230 40 v-24" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="230" cy="10" r="8.5" fill="#00FFFF" filter="url(#glowD)"/>
+          <circle cx="54" cy="158" r="15" fill="#004FFF"/>
+          <circle cx="406" cy="158" r="15" fill="#004FFF"/>
+          <rect x="60" y="40" width="340" height="236" rx="58" fill="url(#shellD)"/>
+          <rect x="86" y="68" width="288" height="184" rx="30" fill="#000E2C"/>
+
+          <!-- face -->
+          <circle cx="158" cy="108" r="15" fill="#00FFFF" filter="url(#glowD)"/>
+          <circle cx="302" cy="108" r="15" fill="#00FFFF" filter="url(#glowD)"/>
+          <circle cx="163" cy="103" r="4.6" fill="#fff"/>
+          <circle cx="307" cy="103" r="4.6" fill="#fff"/>
+          <path d="M196 146 q34 26 68 0" stroke="#71FDFE" stroke-width="4.4" stroke-linecap="round" fill="none"/>
+
+          <!-- the spill: markdown, multicoloured, from inside the head down and out -->
+          <g font-family="SF Mono, Menlo, Consolas, monospace" font-size="13" font-weight="500">
+            <text x="104" y="184" fill="#00FFFF"># concepts/</text>
+            <text x="244" y="184" fill="#7CE8A0">[[platform]]</text>
+            <text x="104" y="205" fill="#A3BBFE">- type: person</text>
+            <text x="244" y="205" fill="#FFC46B">`stale_after`</text>
+            <text x="106" y="228" fill="#C79BFF" transform="rotate(-3 106 228)">verified: [{by, at}]</text>
+            <text x="272" y="230" fill="#5BB6FC" transform="rotate(4 272 230)">&gt; log.md</text>
+            <text x="112" y="242" fill="#7CE8A0" transform="rotate(-2 112 242)">**strong**</text>
+            <text x="238" y="244" fill="#C79BFF" transform="rotate(3 238 244)">tags: [infra]</text>
+            <text x="98"  y="300" fill="#5BB6FC" opacity=".92" transform="rotate(-9 98 300)"># index.md</text>
+            <text x="300" y="298" fill="#FFC46B" opacity=".82" transform="rotate(-5 300 298)">okf: 0.2</text>
+            <text x="184" y="318" fill="#00FFFF" opacity=".6"  transform="rotate(5 184 318)">- log entry</text>
+            <text x="286" y="326" fill="#7CE8A0" opacity=".5"  transform="rotate(-7 286 326)">preferences/</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 4. section -->
+  <section class="slide section section-split">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <div class="row">
+      <div class="left">
+        <div class="eyebrow">Part One</div>
+        <h2>The Format</h2>
+      </div>
+      <div class="quad">
+        <div class="q q-okf">OKF</div>
+        <div class="q q-fm">frontmatter</div>
+        <div class="q q-idx">index</div>
+        <div class="q q-log">log</div>
+      </div>
+    </div>
+    <div class="counter"></div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide okf-slide">
+    <span class="accent a3"></span>
+
+    <div class="okf-top">
+      <div class="okf-head">
+        <h2 class="title">OKF</h2>
+        <div class="trule"></div>
+      </div>
+
+      <div class="codecard">
+        <div class="path">learnings/bees-go-for-the-fearful.md</div>
+<pre><span class="c-del">---</span>
+<span class="c-key">type</span>: <span class="c-val">learning</span>
+<span class="c-key">title</span>: <span class="c-val">Bees go for the fearful</span>
+<span class="c-key">tags</span>: <span class="c-val">[bees, field-notes]</span>
+<span class="c-del">---</span>
+
+<span class="c-head"># Bees go for the fearful</span>
+
+Fear makes you sweat, and bee alarm pheromone
+rides on sweat. Flailing reads as an attack, so
+the hive commits. Standing still is boring.</pre>
+      </div>
+    </div>
+
+    <div class="tree" id="okfTree">
+      <svg class="tlines" id="okfLines" aria-hidden="true"><path d="" fill="none" stroke="#5BB6FC" stroke-width="1.6" stroke-opacity=".62"/></svg>
+
+      <div class="tcol root">
+        <button type="button" class="node root branch" data-target="okfL2"><span class="chev"></span>brain</button>
+      </div>
+
+      <div class="tcol" id="okfL2">
+        <div class="node dir">people</div>
+        <div class="node dir">preferences</div>
+        <div class="node dir">patterns</div>
+        <button type="button" class="node branch" data-target="okfL3"><span class="chev"></span>performance</button>
+        <div class="node file">index.md</div>
+      </div>
+
+      <div class="tcol" id="okfL3">
+        <button type="button" class="node branch" data-target="okfL4"><span class="chev"></span>goals</button>
+        <div class="node dir">learnings</div>
+        <div class="node dir">wins</div>
+        <div class="node file">index.md</div>
+      </div>
+
+      <div class="tcol" id="okfL4">
+        <div class="node file">everything-engineer.md</div>
+        <div class="node file">ship-faster.md</div>
+        <div class="node file">index.md</div>
+      </div>
+    </div>
+
+    <div class="treehint">click a folder to open its branch</div>
+    <div class="counter"></div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide fm-slide">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">Frontmatter</h2>
+    <div class="trule"></div>
+
+    <div class="codecard wide">
+      <div class="path">learnings/bees-go-for-the-fearful.md</div>
+<pre><span class="c-del">---</span>
+<span class="c-req">type</span>: <span class="c-val">learning</span>
+<span class="c-key">title</span>: <span class="c-val">Bees go for the fearful</span>
+<span class="c-key">description</span>: <span class="c-val">Fear makes you sweat, alarm pheromone rides on
+  sweat, and flailing reads as an attack.</span>
+<span class="c-key">tags</span>: <span class="c-val">[bees, field-notes, apiary]</span>
+<span class="c-prov">generated</span>:
+  <span class="c-prov">by</span>: <span class="c-val">claude-code/opus-5</span>
+  <span class="c-prov">at</span>: <span class="c-val">'2026-08-18'</span>
+<span class="c-trust">verified</span>:
+  - <span class="c-trust">by</span>: <span class="c-val">human:&lt;you&gt;</span>
+    <span class="c-trust">at</span>: <span class="c-val">'2026-08-18'</span>
+<span class="c-trust">confidence</span>: <span class="c-val">confirmed</span>
+<span class="c-trust">stale_after</span>: <span class="c-val">'2027-03-01'</span>
+<span class="c-src">sources</span>:
+  - <span class="c-src">resource</span>: <span class="c-val">/concepts/alarm-pheromone.md</span>
+<span class="c-del">---</span>
+
+<span class="c-head"># Bees go for the fearful</span></pre>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide fm-slide">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">Root Dirs</h2>
+    <div class="trule"></div>
+
+    <div class="scatter">
+      <div class="chip" style="--c:#00FFFF; left:600px; top:86px;  transform:rotate(-7deg)">preferences</div>
+      <div class="chip" style="--c:#5BB6FC; left:904px; top:190px; transform:rotate(6deg)">performance</div>
+      <div class="chip" style="--c:#7CE8A0; left:380px; top:250px; transform:rotate(4deg)">people</div>
+      <div class="chip" style="--c:#A3BBFE; left:690px; top:330px; transform:rotate(-5deg)">concepts</div>
+      <div class="chip" style="--c:#FFC46B; left:150px; top:430px; transform:rotate(-11deg)">quests</div>
+      <div class="chip" style="--c:#C79BFF; left:958px; top:455px; transform:rotate(9deg)">projects</div>
+      <div class="chip" style="--c:#FF8FAB; left:480px; top:540px; transform:rotate(-6deg)">tribal knowledge</div>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide visual">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">index.md</h2>
+    <div class="trule"></div>
+
+    <div class="art xl">
+      <svg viewBox="0 0 820 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An AI agent consulting a GPS whose screen shows branching routes, one of which reaches the destination">
+        <defs>
+          <linearGradient id="shellE" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <linearGradient id="shellE2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+          </linearGradient>
+          <radialGradient id="haloE" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#004FFF" stop-opacity=".42"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glowE" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <ellipse cx="430" cy="180" rx="392" ry="176" fill="url(#haloE)"/>
+        <ellipse cx="154" cy="294" rx="94" ry="13" fill="#000B22" opacity=".45"/>
+
+        <!-- agent, turned toward the device -->
+        <g>
+          <path d="M150 52 v-22" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="150" cy="24" r="8" fill="#00FFFF" filter="url(#glowE)"/>
+          <circle cx="90" cy="104" r="11" fill="#004FFF"/>
+          <circle cx="210" cy="104" r="11" fill="#004FFF"/>
+          <rect x="124" y="228" width="22" height="34" rx="11" fill="url(#shellE2)"/>
+          <rect x="162" y="228" width="22" height="34" rx="11" fill="url(#shellE2)"/>
+          <ellipse cx="130" cy="276" rx="24" ry="14" fill="url(#shellE)"/>
+          <ellipse cx="178" cy="276" rx="24" ry="14" fill="url(#shellE)"/>
+          <rect x="112" y="152" width="84" height="82" rx="26" fill="url(#shellE)"/>
+          <rect x="134" y="174" width="40" height="20" rx="10" fill="#002463" opacity=".72"/>
+          <circle cx="144" cy="184" r="3" fill="#00FFFF"/>
+          <circle cx="154" cy="184" r="3" fill="#00FFFF" opacity=".6"/>
+          <circle cx="164" cy="184" r="3" fill="#00FFFF" opacity=".3"/>
+          <path d="M194 178 C 226 174, 250 176, 272 180" stroke="url(#shellE2)" stroke-width="17" stroke-linecap="round" fill="none"/>
+          <path d="M194 212 C 228 224, 252 238, 272 248" stroke="url(#shellE2)" stroke-width="17" stroke-linecap="round" fill="none"/>
+          <g transform="rotate(5 151 100)">
+            <rect x="96" y="52" width="110" height="96" rx="32" fill="url(#shellE)"/>
+            <rect x="112" y="72" width="78" height="58" rx="22" fill="#000E2C"/>
+            <circle cx="136" cy="100" r="9" fill="#00FFFF" filter="url(#glowE)"/>
+            <circle cx="168" cy="100" r="9" fill="#00FFFF" filter="url(#glowE)"/>
+            <circle cx="139.5" cy="97" r="3" fill="#fff"/>
+            <circle cx="171.5" cy="97" r="3" fill="#fff"/>
+            <path d="M141 117 q11 8 22 0" stroke="#71FDFE" stroke-width="2.8" stroke-linecap="round" fill="none" opacity=".85"/>
+          </g>
+        </g>
+
+        <!-- GPS unit -->
+        <g transform="rotate(-3 500 170)">
+          <rect x="280" y="44" width="440" height="250" rx="22" fill="url(#shellE)" stroke="#8E9CD7" stroke-width="1.5"/>
+          <rect x="300" y="64" width="400" height="192" rx="13" fill="#001028"/>
+
+          <!-- top bezel: signal + status dots -->
+          <g fill="#00FFFF">
+            <rect x="316" y="52" width="3" height="5" rx="1"/>
+            <rect x="322" y="49" width="3" height="8" rx="1"/>
+            <rect x="328" y="46" width="3" height="11" rx="1"/>
+          </g>
+          <circle cx="686" cy="54" r="3" fill="#8E9CD7"/>
+          <circle cx="676" cy="54" r="3" fill="#8E9CD7"/>
+          <circle cx="666" cy="54" r="3" fill="#8E9CD7"/>
+
+          <!-- bottom bezel: buttons -->
+          <circle cx="500" cy="275" r="13" fill="#8E9CD7"/>
+          <circle cx="452" cy="275" r="7" fill="#A3BBFE"/>
+          <circle cx="548" cy="275" r="7" fill="#A3BBFE"/>
+
+          <!-- screen: faint map grid + blocks -->
+          <g stroke="#5BB6FC" stroke-opacity=".07" stroke-width="1">
+            <path d="M356 64 V256 M412 64 V256 M468 64 V256 M524 64 V256 M580 64 V256 M636 64 V256"/>
+            <path d="M300 112 H700 M300 160 H700 M300 208 H700"/>
+          </g>
+          <g fill="#5BB6FC" fill-opacity=".07">
+            <rect x="330" y="86" width="58" height="38" rx="6"/>
+            <rect x="420" y="198" width="68" height="34" rx="6"/>
+            <rect x="558" y="188" width="62" height="44" rx="6"/>
+            <rect x="600" y="76" width="58" height="34" rx="6"/>
+          </g>
+
+          <!-- dead-end branches -->
+          <g stroke="#46597F" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M398 222 V240 H452"/>
+            <path d="M398 180 H356 V146"/>
+            <path d="M472 180 H530 V214"/>
+            <path d="M472 140 V104 H424"/>
+            <path d="M552 140 H600 V176"/>
+          </g>
+          <g stroke="#7A8AAE" stroke-width="2.4" stroke-linecap="round">
+            <path d="M455 235 l10 10 M465 235 l-10 10"/>
+            <path d="M351 133 l10 10 M361 133 l-10 10"/>
+            <path d="M525 217 l10 10 M535 217 l-10 10"/>
+            <path d="M419 99 l10 10 M429 99 l-10 10"/>
+            <path d="M595 179 l10 10 M605 179 l-10 10"/>
+          </g>
+
+          <!-- the route that gets there -->
+          <path d="M344 222 H398 V180 H472 V140 H552 V110 H628"
+                stroke="#00FFFF" stroke-width="4" fill="none"
+                stroke-linecap="round" stroke-linejoin="round" filter="url(#glowE)"/>
+
+          <!-- start -->
+          <circle cx="344" cy="222" r="13" fill="none" stroke="#5BB6FC" stroke-width="2" stroke-opacity=".55"/>
+          <circle cx="344" cy="222" r="6.5" fill="#5BB6FC"/>
+
+          <!-- destination -->
+          <circle cx="628" cy="88" r="34" fill="none" stroke="#00FFFF" stroke-width="1.5" stroke-opacity=".14"/>
+          <circle cx="628" cy="88" r="24" fill="none" stroke="#00FFFF" stroke-width="1.5" stroke-opacity=".28"/>
+          <path d="M628 70 c-10 0 -18 8 -18 18 c0 12 18 22 18 22 s18 -10 18 -22 c0 -10 -8 -18 -18 -18 z"
+                fill="#00FFFF" filter="url(#glowE)"/>
+          <circle cx="628" cy="88" r="6" fill="#001028"/>
+        </g>
+
+        <!-- hands gripping the unit -->
+        <rect x="262" y="166" width="36" height="28" rx="13" fill="url(#shellE)"/>
+        <rect x="262" y="234" width="36" height="28" rx="13" fill="url(#shellE)"/>
+      </svg>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide visual">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">log.md</h2>
+    <div class="trule"></div>
+
+    <div class="art xl">
+      <svg viewBox="0 0 860 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An AI agent walking right near the edge, each footstep behind it raising a light beam that ends in a floating cube">
+        <defs>
+          <linearGradient id="shellF" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <linearGradient id="shellF2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+          </linearGradient>
+          <radialGradient id="haloF" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#004FFF" stop-opacity=".4"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="beamF" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#00FFFF" stop-opacity="0"/>
+            <stop offset="1" stop-color="#00FFFF" stop-opacity=".85"/>
+          </linearGradient>
+          <filter id="glowF" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <g id="logcube">
+            <path d="M0 -10 L12 -4 L0 2 L-12 -4 Z" fill="#71FDFE"/>
+            <path d="M-12 -4 L0 2 L0 14 L-12 8 Z" fill="#0B3AA8"/>
+            <path d="M12 -4 L0 2 L0 14 L12 8 Z" fill="#5BB6FC"/>
+          </g>
+        </defs>
+
+        <ellipse cx="430" cy="180" rx="404" ry="180" fill="url(#haloF)"/>
+
+        <!-- ground -->
+        <path d="M20 292 H840" stroke="#5BB6FC" stroke-width="1.5" stroke-opacity=".18"/>
+
+        <!-- logged steps: footprint -> beam -> floating cube, growing toward the present -->
+        <g>
+          <ellipse cx="92" cy="288" rx="9" ry="13" transform="rotate(-6 92 288)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="92" cy="288" rx="17" ry="6" fill="#00FFFF" opacity=".24"/>
+          <rect x="90.5" y="78" width="3" height="206" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(92,66) rotate(-4)"/>
+
+          <ellipse cx="196" cy="280" rx="9" ry="13" transform="rotate(5 196 280)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="196" cy="280" rx="17" ry="6" fill="#00FFFF" opacity=".21"/>
+          <rect x="194.5" y="100" width="3" height="176" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(196,88) rotate(3)"/>
+
+          <ellipse cx="300" cy="288" rx="9" ry="13" transform="rotate(-5 300 288)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="300" cy="288" rx="17" ry="6" fill="#00FFFF" opacity=".19"/>
+          <rect x="298.5" y="138" width="3" height="146" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(300,126) rotate(-3)"/>
+
+          <ellipse cx="404" cy="280" rx="9" ry="13" transform="rotate(6 404 280)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="404" cy="280" rx="17" ry="6" fill="#00FFFF" opacity=".17"/>
+          <rect x="402.5" y="158" width="3" height="118" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(404,146) rotate(4)"/>
+
+          <ellipse cx="508" cy="288" rx="9" ry="13" transform="rotate(-6 508 288)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="508" cy="288" rx="17" ry="6" fill="#00FFFF" opacity=".15"/>
+          <rect x="506.5" y="192" width="3" height="92" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(508,180) rotate(-2)"/>
+
+          <ellipse cx="608" cy="280" rx="9" ry="13" transform="rotate(5 608 280)" fill="#3A5183" stroke="#5BB6FC" stroke-width="1.2" stroke-opacity=".4"/>
+          <ellipse cx="608" cy="280" rx="17" ry="6" fill="#00FFFF" opacity=".13"/>
+          <rect x="606.5" y="210" width="3" height="66" fill="url(#beamF)"/>
+          <use href="#logcube" transform="translate(608,198) rotate(3)"/>
+        </g>
+
+        <!-- agent, mid-stride, near the right edge -->
+        <g>
+          <ellipse cx="800" cy="292" rx="62" ry="11" fill="#000B22" opacity=".42"/>
+          <path d="M776 52 v-22" stroke="#8E9CD7" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="776" cy="24" r="8" fill="#00FFFF" filter="url(#glowF)"/>
+          <!-- motion cues behind him -->
+          <g stroke="#A3BBFE" stroke-linecap="round" fill="none" stroke-opacity=".3">
+            <path d="M662 196 h34" stroke-width="2.6"/>
+            <path d="M672 220 h26" stroke-width="2.4"/>
+            <path d="M680 244 h19" stroke-width="2.2"/>
+          </g>
+          <!-- trailing arm, swung back -->
+          <path d="M742 182 C 716 190, 704 202, 702 216" stroke="url(#shellF2)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="701" cy="218" r="9.5" fill="url(#shellF)"/>
+          <!-- trailing leg: lifted, heel up, mid toe-off -->
+          <path d="M762 226 L740 244 L726 254" stroke="url(#shellF2)" stroke-width="19" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <ellipse cx="716" cy="258" rx="21" ry="10" transform="rotate(-46 716 258)" fill="url(#shellF)"/>
+          <!-- dust at the push-off -->
+          <g stroke="#71FDFE" stroke-linecap="round" fill="none" stroke-opacity=".32">
+            <path d="M700 278 q8 -7 17 -4" stroke-width="2.2"/>
+            <path d="M694 288 q11 -8 22 -5" stroke-width="2"/>
+          </g>
+          <!-- lead leg: reaching ahead, foot planted flat -->
+          <path d="M790 226 L812 252 L826 272" stroke="url(#shellF2)" stroke-width="19" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <ellipse cx="834" cy="278" rx="25" ry="11" fill="url(#shellF)"/>
+          <!-- body -->
+          <rect x="736" y="150" width="80" height="80" rx="26" fill="url(#shellF)"/>
+          <rect x="757" y="172" width="38" height="20" rx="10" fill="#002463" opacity=".72"/>
+          <circle cx="767" cy="182" r="3" fill="#00FFFF"/>
+          <circle cx="776" cy="182" r="3" fill="#00FFFF" opacity=".6"/>
+          <circle cx="785" cy="182" r="3" fill="#00FFFF" opacity=".3"/>
+          <!-- head, leaning into the walk -->
+          <g transform="rotate(5 776 98)">
+            <circle cx="716" cy="102" r="11" fill="#004FFF"/>
+            <circle cx="836" cy="102" r="11" fill="#004FFF"/>
+            <rect x="722" y="52" width="108" height="92" rx="30" fill="url(#shellF)"/>
+            <rect x="740" y="72" width="76" height="56" rx="21" fill="#000E2C"/>
+            <circle cx="764" cy="98" r="9" fill="#00FFFF" filter="url(#glowF)"/>
+            <circle cx="794" cy="98" r="9" fill="#00FFFF" filter="url(#glowF)"/>
+            <circle cx="767.5" cy="95" r="3" fill="#fff"/>
+            <circle cx="797.5" cy="95" r="3" fill="#fff"/>
+            <path d="M768 115 q11 8 22 0" stroke="#71FDFE" stroke-width="2.8" stroke-linecap="round" fill="none" opacity=".85"/>
+          </g>
+          <!-- leading arm, swung forward -->
+          <path d="M812 180 C 836 186, 846 198, 845 213" stroke="url(#shellF2)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="845" cy="215" r="9.5" fill="url(#shellF)"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide split-slide tri-slide">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">Choose an Approach</h2>
+    <div class="trule"></div>
+
+    <div class="split">
+      <div class="col stack">
+        <svg viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An agent sorting new notes into separate topic folders">
+          <defs>
+            <linearGradient id="shellG" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+            </linearGradient>
+            <linearGradient id="shellG2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+            </linearGradient>
+            <radialGradient id="haloG" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#004FFF" stop-opacity=".4"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glowG" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="3.6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <ellipse cx="230" cy="180" rx="216" ry="160" fill="url(#haloG)"/>
+          <g>
+            <path d="M74 150 v-18" stroke="#8E9CD7" stroke-width="4.5" stroke-linecap="round"/>
+            <circle cx="74" cy="126" r="6.5" fill="#00FFFF" filter="url(#glowG)"/>
+            <circle cx="26" cy="190" r="9" fill="#004FFF"/>
+            <circle cx="122" cy="190" r="9" fill="#004FFF"/>
+            <ellipse cx="74" cy="316" rx="54" ry="10" fill="#000B22" opacity=".42"/>
+            <ellipse cx="60" cy="306" rx="18" ry="10" fill="url(#shellG)"/>
+            <ellipse cx="88" cy="306" rx="18" ry="10" fill="url(#shellG)"/>
+            <rect x="44" y="232" width="60" height="62" rx="20" fill="url(#shellG)"/>
+            <path d="M104 250 C 130 250, 146 262, 156 272" stroke="url(#shellG2)" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <rect x="30" y="150" width="88" height="78" rx="26" fill="url(#shellG)"/>
+            <rect x="42" y="168" width="64" height="46" rx="17" fill="#000E2C"/>
+            <circle cx="61" cy="190" r="7.5" fill="#00FFFF" filter="url(#glowG)"/>
+            <circle cx="87" cy="190" r="7.5" fill="#00FFFF" filter="url(#glowG)"/>
+            <circle cx="63.5" cy="187.5" r="2.6" fill="#fff"/>
+            <circle cx="89.5" cy="187.5" r="2.6" fill="#fff"/>
+            <path d="M64 204 q10 7 20 0" stroke="#71FDFE" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".85"/>
+          </g>
+            <rect x="156" y="270" width="38" height="28" rx="5" transform="rotate(-7 175 284)" fill="#8E9CD7"/>
+            <rect x="160" y="264" width="38" height="28" rx="5" transform="rotate(-4 179 278)" fill="#A3BBFE"/>
+            <rect x="164" y="258" width="38" height="28" rx="5" transform="rotate(-1 183 272)" fill="#E7EDFF"/>
+          <!-- three topic folders -->
+          <g>
+            <rect x="272" y="52"  width="52" height="12" rx="4" fill="#00FFFF" opacity=".85"/>
+            <rect x="272" y="62"  width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#00FFFF" stroke-width="2.5"/>
+            <text x="290" y="98"  font-family="SF Mono, Menlo, monospace" font-size="13" fill="#00FFFF">preferences/</text>
+
+            <rect x="272" y="150" width="52" height="12" rx="4" fill="#7CE8A0" opacity=".85"/>
+            <rect x="272" y="160" width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#7CE8A0" stroke-width="2.5"/>
+            <text x="290" y="196" font-family="SF Mono, Menlo, monospace" font-size="13" fill="#7CE8A0">people/</text>
+
+            <rect x="272" y="248" width="52" height="12" rx="4" fill="#C79BFF" opacity=".85"/>
+            <rect x="272" y="258" width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#C79BFF" stroke-width="2.5"/>
+            <text x="290" y="294" font-family="SF Mono, Menlo, monospace" font-size="13" fill="#C79BFF">projects/</text>
+          </g>
+
+          <!-- fan out: one note, sorted by topic -->
+          <g fill="none" stroke-width="2.2" stroke-linecap="round">
+            <path d="M200 262 C 228 240, 236 130, 258 98"  stroke="#00FFFF" opacity=".8"/>
+            <path d="M202 272 C 230 268, 238 208, 258 194" stroke="#7CE8A0" opacity=".8"/>
+            <path d="M202 282 C 230 292, 238 292, 258 290" stroke="#C79BFF" opacity=".8"/>
+          </g>
+          <path d="M266 94 l-11 -5.5 v11 z"  fill="#00FFFF"/>
+          <path d="M266 191 l-11 -5.5 v11 z" fill="#7CE8A0"/>
+          <path d="M266 289 l-11 -5.5 v11 z" fill="#C79BFF"/>
+        </svg>
+        <div class="cap"><b>mine</b> - categorical, sorted by topic</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="col stack">
+        <svg viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An agent filing new notes into dated daily, weekly and monthly folders in sequence">
+          <defs>
+            <linearGradient id="shellH" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+            </linearGradient>
+            <linearGradient id="shellH2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+            </linearGradient>
+            <radialGradient id="haloH" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#004FFF" stop-opacity=".4"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glowH" x="-70%" y="-70%" width="240%" height="240%">
+              <feGaussianBlur stdDeviation="3.6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <ellipse cx="230" cy="180" rx="216" ry="160" fill="url(#haloH)"/>
+          <g>
+            <path d="M74 150 v-18" stroke="#8E9CD7" stroke-width="4.5" stroke-linecap="round"/>
+            <circle cx="74" cy="126" r="6.5" fill="#00FFFF" filter="url(#glowH)"/>
+            <circle cx="26" cy="190" r="9" fill="#004FFF"/>
+            <circle cx="122" cy="190" r="9" fill="#004FFF"/>
+            <ellipse cx="74" cy="316" rx="54" ry="10" fill="#000B22" opacity=".42"/>
+            <ellipse cx="60" cy="306" rx="18" ry="10" fill="url(#shellH)"/>
+            <ellipse cx="88" cy="306" rx="18" ry="10" fill="url(#shellH)"/>
+            <rect x="44" y="232" width="60" height="62" rx="20" fill="url(#shellH)"/>
+            <path d="M104 250 C 130 250, 146 262, 156 272" stroke="url(#shellH2)" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <rect x="30" y="150" width="88" height="78" rx="26" fill="url(#shellH)"/>
+            <rect x="42" y="168" width="64" height="46" rx="17" fill="#000E2C"/>
+            <circle cx="61" cy="190" r="7.5" fill="#00FFFF" filter="url(#glowH)"/>
+            <circle cx="87" cy="190" r="7.5" fill="#00FFFF" filter="url(#glowH)"/>
+            <circle cx="63.5" cy="187.5" r="2.6" fill="#fff"/>
+            <circle cx="89.5" cy="187.5" r="2.6" fill="#fff"/>
+            <path d="M64 204 q10 7 20 0" stroke="#71FDFE" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".85"/>
+          </g>
+            <rect x="156" y="270" width="38" height="28" rx="5" transform="rotate(-7 175 284)" fill="#8E9CD7"/>
+            <rect x="160" y="264" width="38" height="28" rx="5" transform="rotate(-4 179 278)" fill="#A3BBFE"/>
+            <rect x="164" y="258" width="38" height="28" rx="5" transform="rotate(-1 183 272)" fill="#E7EDFF"/>
+          <!-- dated bins, one axis, three granularities -->
+          <g font-family="SF Mono, Menlo, monospace" font-size="12.5">
+            <rect x="292" y="54" width="5" height="10" rx="2" fill="#00FFFF"/>
+            <rect x="308" y="54" width="5" height="10" rx="2" fill="#00FFFF"/>
+            <rect x="272" y="62"  width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#00FFFF" stroke-width="2.5"/>
+            <text x="288" y="97" fill="#00FFFF">daily/08-18</text>
+
+            <rect x="292" y="152" width="5" height="10" rx="2" fill="#00FFFF" opacity=".72"/>
+            <rect x="308" y="152" width="5" height="10" rx="2" fill="#00FFFF" opacity=".72"/>
+            <rect x="272" y="160" width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#00FFFF" stroke-width="2.5" stroke-opacity=".72"/>
+            <text x="288" y="195" fill="#00FFFF" opacity=".82">weekly/2026-W34</text>
+
+            <rect x="292" y="250" width="5" height="10" rx="2" fill="#00FFFF" opacity=".5"/>
+            <rect x="308" y="250" width="5" height="10" rx="2" fill="#00FFFF" opacity=".5"/>
+            <rect x="272" y="258" width="150" height="58" rx="9" fill="rgba(0,10,32,.55)" stroke="#00FFFF" stroke-width="2.5" stroke-opacity=".5"/>
+            <text x="288" y="293" fill="#00FFFF" opacity=".65">monthly/2026-08</text>
+          </g>
+
+          <!-- single entry point, then rolls forward in time -->
+          <path d="M200 262 C 228 240, 236 130, 258 98" stroke="#00FFFF" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".8"/>
+          <path d="M266 94 l-11 -5.5 v11 z" fill="#00FFFF"/>
+          <path d="M347 122 V150" stroke="#00FFFF" stroke-width="2.2" stroke-opacity=".6"/>
+          <path d="M347 158 l-5.5 -11 h11 z" fill="#00FFFF" opacity=".6"/>
+          <path d="M347 220 V248" stroke="#00FFFF" stroke-width="2.2" stroke-opacity=".45"/>
+          <path d="M347 256 l-5.5 -11 h11 z" fill="#00FFFF" opacity=".45"/>
+        </svg>
+        <div class="cap"><b>a colleague's</b> - timeline, sorted by date</div>
+      </div>
+    </div>
+
+    <div class="hdivider"></div>
+
+    <div class="third">
+      <svg viewBox="0 0 340 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An agent beside question marks and empty dashed containers, its filing shape not yet decided">
+        <defs>
+          <linearGradient id="shellJ" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <filter id="glowJ" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- small agent -->
+        <ellipse cx="45" cy="125" rx="34" ry="6" fill="#000B22" opacity=".42"/>
+        <path d="M45 22 v-10" stroke="#8E9CD7" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="45" cy="7" r="5" fill="#00FFFF" filter="url(#glowJ)"/>
+        <ellipse cx="34" cy="118" rx="12" ry="7" fill="url(#shellJ)"/>
+        <ellipse cx="56" cy="118" rx="12" ry="7" fill="url(#shellJ)"/>
+        <rect x="24" y="78" width="42" height="38" rx="14" fill="url(#shellJ)"/>
+        <path d="M66 88 C 82 86, 92 80, 98 74" stroke="#8E9CD7" stroke-width="9" stroke-linecap="round" fill="none"/>
+        <rect x="14" y="22" width="62" height="56" rx="18" fill="url(#shellJ)"/>
+        <rect x="23" y="34" width="44" height="32" rx="12" fill="#000E2C"/>
+        <circle cx="37" cy="50" r="5.5" fill="#00FFFF" filter="url(#glowJ)"/>
+        <circle cx="55" cy="50" r="5.5" fill="#00FFFF" filter="url(#glowJ)"/>
+        <circle cx="38.8" cy="48.2" r="1.8" fill="#fff"/>
+        <circle cx="56.8" cy="48.2" r="1.8" fill="#fff"/>
+        <path d="M39 60 q7 5 14 0" stroke="#71FDFE" stroke-width="2" stroke-linecap="round" fill="none" opacity=".85"/>
+
+        <!-- ?? -->
+        <text x="122" y="52" text-anchor="middle" font-family="Montserrat, Roboto, sans-serif" font-size="42" font-weight="300" fill="#00FFFF" filter="url(#glowJ)" transform="rotate(-7 122 52)">??</text>
+
+        <!-- undecided containers -->
+        <g fill="none" stroke-width="2.2" stroke-dasharray="6 5" stroke-linejoin="round">
+          <rect x="176" y="8"  width="76" height="32" rx="8" stroke="#00FFFF" stroke-opacity=".62" transform="rotate(5 214 24)"/>
+          <rect x="256" y="46" width="76" height="32" rx="8" stroke="#7CE8A0" stroke-opacity=".62" transform="rotate(-7 294 62)"/>
+          <rect x="180" y="84" width="76" height="32" rx="8" stroke="#C79BFF" stroke-opacity=".62" transform="rotate(-3 218 100)"/>
+        </g>
+        <g fill="none" stroke="#A3BBFE" stroke-width="1.8" stroke-dasharray="4 5" stroke-opacity=".5" stroke-linecap="round">
+          <path d="M150 42 C 162 32, 166 26, 172 24"/>
+          <path d="M152 62 C 190 66, 224 64, 252 62"/>
+          <path d="M150 74 C 160 86, 166 96, 176 100"/>
+        </g>
+      </svg>
+      <div class="cap"><b>yours</b> - what makes sense to you</div>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide visual">
+    <span class="accent a1"></span><span class="accent a3"></span>
+    <h2 class="title">How?</h2>
+    <div class="trule"></div>
+
+    <div class="howrow">
+    <div class="art howart">
+      <svg viewBox="0 0 460 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A confused AI agent scratching its head under a floating question mark">
+        <defs>
+          <linearGradient id="shellI" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E7EDFF"/><stop offset="1" stop-color="#A3BBFE"/>
+          </linearGradient>
+          <linearGradient id="shellI2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9D8FF"/><stop offset="1" stop-color="#8E9CD7"/>
+          </linearGradient>
+          <radialGradient id="haloI" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#004FFF" stop-opacity=".42"/><stop offset="1" stop-color="#004FFF" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glowI" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="4.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <ellipse cx="226" cy="190" rx="220" ry="186" fill="url(#haloI)"/>
+
+        <!-- question marks -->
+        <text x="196" y="52" text-anchor="middle" font-family="Montserrat, Roboto, sans-serif" font-size="34" font-weight="300" fill="#5BB6FC" opacity=".5" transform="rotate(-12 196 52)">?</text>
+        <text x="336" y="44" text-anchor="middle" font-family="Montserrat, Roboto, sans-serif" font-size="26" font-weight="300" fill="#A3BBFE" opacity=".38" transform="rotate(14 336 44)">?</text>
+        <text x="278" y="86" text-anchor="middle" font-family="Montserrat, Roboto, sans-serif" font-size="94" font-weight="300" fill="#00FFFF" filter="url(#glowI)" transform="rotate(8 278 86)">?</text>
+
+        <!-- agent -->
+        <g>
+          <ellipse cx="202" cy="366" rx="86" ry="12" fill="#000B22" opacity=".42"/>
+          <!-- drooping antenna -->
+          <path d="M200 120 C 208 104, 218 98, 224 96" stroke="#8E9CD7" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <circle cx="228" cy="94" r="7.5" fill="#00FFFF" filter="url(#glowI)"/>
+          <circle cx="124" cy="186" r="12" fill="#004FFF"/>
+          <circle cx="276" cy="186" r="12" fill="#004FFF"/>
+          <!-- hanging arm -->
+          <path d="M158 254 C 138 268, 132 284, 132 298" stroke="url(#shellI2)" stroke-width="16" stroke-linecap="round" fill="none"/>
+          <rect x="172" y="310" width="22" height="32" rx="11" fill="url(#shellI2)"/>
+          <rect x="210" y="310" width="22" height="32" rx="11" fill="url(#shellI2)"/>
+          <ellipse cx="178" cy="352" rx="23" ry="13" fill="url(#shellI)"/>
+          <ellipse cx="228" cy="352" rx="23" ry="13" transform="rotate(12 228 352)" fill="url(#shellI)"/>
+          <rect x="158" y="234" width="88" height="80" rx="26" fill="url(#shellI)"/>
+          <rect x="180" y="256" width="42" height="20" rx="10" fill="#002463" opacity=".72"/>
+          <circle cx="190" cy="266" r="3" fill="#00FFFF"/>
+          <circle cx="200" cy="266" r="3" fill="#00FFFF" opacity=".6"/>
+          <circle cx="210" cy="266" r="3" fill="#00FFFF" opacity=".3"/>
+          <!-- head, puzzled -->
+          <rect x="130" y="120" width="140" height="120" rx="40" fill="url(#shellI)"/>
+          <rect x="148" y="142" width="104" height="78" rx="28" fill="#000E2C"/>
+          <circle cx="176" cy="176" r="11" fill="#00FFFF" filter="url(#glowI)"/>
+          <circle cx="179" cy="173" r="3.6" fill="#fff"/>
+          <path d="M212 180 q12 -10 24 0" stroke="#00FFFF" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+          <path d="M180 206 q9 -7 18 0 t18 0" stroke="#71FDFE" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+          <!-- raised arm, scratching -->
+          <path d="M244 252 C 292 240, 300 178, 276 148" stroke="url(#shellI2)" stroke-width="16" stroke-linecap="round" fill="none"/>
+          <ellipse cx="266" cy="139" rx="18" ry="15" transform="rotate(-24 266 139)" fill="url(#shellI)"/>
+          <g stroke="#71FDFE" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".55">
+            <path d="M288 122 q9 -6 15 -3"/>
+            <path d="M292 134 q10 -4 16 0"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+      <div class="promptcard">
+        <div class="pc-label">What I'm sending you</div>
+<pre>Look at this repo: <span class="url">https://github.com/vikingsearth/brainalyser</span>
+Read START-HERE.md and follow it to set me up with a second brain.</pre>
+      </div>
+    </div>
+
+    <div class="counter"></div>
+  </section>
+
+</div>
+
+<div class="hint" id="hint">left / right arrow to move &nbsp;&#183;&nbsp; f for fullscreen</div>
+
+<script>
+  var stage    = document.getElementById('stage');
+  var slides   = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var progress = document.getElementById('progress');
+  var hint     = document.getElementById('hint');
+  var i = 0;
+
+  function fit() {
+    var w = window.innerWidth  || document.documentElement.clientWidth  || 1280;
+    var h = window.innerHeight || document.documentElement.clientHeight || 720;
+    var s = Math.min(w / 1280, h / 720);
+    if (!isFinite(s) || s <= 0) s = 1;   /* never scale to nothing: a 0 here blanks the deck */
+    stage.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+  }
+
+  function show(n, push) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle('active', k === i); });
+    var c = slides[i].querySelector('.counter');
+    if (c) c.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    if (push !== false) history.replaceState(null, '', '#' + (i + 1));
+    drawTree();   /* offset* is 0 while a slide is display:none, so redraw on activation */
+  }
+
+  /* ---- interactive tree on the OKF slide ---- */
+  function drawTree() {
+    var tree = document.getElementById('okfTree');
+    if (!tree || !tree.offsetWidth) return;
+    var svg = document.getElementById('okfLines');
+    svg.setAttribute('width',  tree.offsetWidth);
+    svg.setAttribute('height', tree.offsetHeight);
+    var d = '';
+    Array.prototype.forEach.call(tree.querySelectorAll('.branch'), function (p) {
+      var col = document.getElementById(p.getAttribute('data-target'));
+      if (!col || !col.classList.contains('open')) return;
+      var px = p.offsetLeft + p.offsetWidth;
+      var py = p.offsetTop + p.offsetHeight / 2;
+      Array.prototype.forEach.call(col.children, function (c) {
+        var cx = c.offsetLeft;
+        var cy = c.offsetTop + c.offsetHeight / 2;
+        var mx = px + (cx - px) / 2;
+        d += 'M' + px + ' ' + py + ' H' + mx + ' V' + cy + ' H' + cx + ' ';
+      });
+    });
+    svg.querySelector('path').setAttribute('d', d);
+  }
+
+  function closeBranch(col) {
+    col.classList.remove('open');
+    Array.prototype.forEach.call(col.querySelectorAll('.branch'), function (b) {
+      b.classList.remove('is-open');
+      var t = document.getElementById(b.getAttribute('data-target'));
+      if (t) closeBranch(t);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('#okfTree .branch'), function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var col = document.getElementById(b.getAttribute('data-target'));
+      if (!col) return;
+      if (col.classList.contains('open')) { closeBranch(col); b.classList.remove('is-open'); }
+      else { col.classList.add('open'); b.classList.add('is-open'); }
+      drawTree();
+    });
+  });
+
+  /* navigation: left / right arrow only. no click-to-advance, no auto-advance timer. */
+  document.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight')     { e.preventDefault(); show(i + 1); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); show(i - 1); }
+    else if (k === 'Home')      { show(0); }
+    else if (k === 'End')       { show(slides.length - 1); }
+    else if (k === 'f') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    }
+  });
+
+  window.addEventListener('resize', function () { fit(); drawTree(); });
+  window.addEventListener('load', function () { fit(); drawTree(); });
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(document.documentElement);
+  window.addEventListener('hashchange', function () {
+    var n = parseInt(location.hash.slice(1), 10);
+    if (!isNaN(n)) show(n - 1, false);
+  });
+
+  fit();
+  var start = parseInt(location.hash.slice(1), 10);
+  show(isNaN(start) ? 0 : start - 1);
+  setTimeout(function () { hint.classList.add('gone'); }, 4200);
+</script>
+
+</body>
+</html>
