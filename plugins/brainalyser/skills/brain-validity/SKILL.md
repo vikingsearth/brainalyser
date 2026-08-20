@@ -6,6 +6,7 @@ allowed-tools:
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" *)
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" *)
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py" *)
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh")
   - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh" *)
 metadata:
   author: wikus
@@ -144,8 +145,20 @@ bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh"
 ```
 
 It fetches, hashes, and compares against `.claude/state/okf-spec.sha` for you.
-Read its `status:` line - `UNCHANGED` / `CHANGED` / `FIRST-RUN` / `FETCH-FAILED`
-(exit 0 / 10 / 20 / 1).
+Read its `status:` line:
+
+| status | exit | means |
+| --- | --- | --- |
+| `UNCHANGED` | 0 | one line in the report: "okf spec unchanged, v0.2" |
+| `CHANGED` | 10 | a real byte difference - report it prominently |
+| `FIRST-RUN` | 20 | no watermark yet |
+| `PARSE-FAILED` | 30 | fetched fine, no version line matched - the spec may have changed shape |
+| `FETCH-FAILED` | 1 | offline or moved; also a local hash failure |
+
+**Only exit 10 means the spec moved.** Every other failure carries its own status
+rather than being folded into `CHANGED`, because a false spec-change is the
+expensive direction: it is meant to halt the work. Never report `PARSE-FAILED` or
+`FETCH-FAILED` as a change, and never `--update` on either.
 
 **Do not hand-roll the hash.** The obvious spelling is wrong in a way that fails
 towards a false alarm: `SPEC=$(curl ...)` strips trailing newlines - command

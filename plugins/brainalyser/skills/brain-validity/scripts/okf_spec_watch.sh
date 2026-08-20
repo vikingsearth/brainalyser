@@ -16,7 +16,11 @@
 #   --repo     bundle repo root; default $BRAIN_REPO, else $HOME/dev/myMemory
 #
 # Exit: 0 unchanged | 10 CHANGED (report it) | 20 first run (no watermark)
-#       1 fetch failed | 2 bad usage
+#       30 fetched but no version line matched | 2 bad usage
+#       1 fetch or local hash failed
+#
+# Nothing but a real byte difference exits 10. Every other failure gets its own
+# status, because a false "the spec moved" is the expensive direction here.
 
 set -uo pipefail
 
@@ -28,7 +32,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --update) UPDATE=1; shift ;;
     --repo)   REPO="${2:?--repo needs a path}"; shift 2 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,/^$/p' "$0"; exit 0 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -37,7 +41,6 @@ WATERMARK="$REPO/.claude/state/okf-spec.sha"
 TMP="$(mktemp -t okf-spec)" || { echo "cannot mktemp" >&2; exit 1; }
 trap 'rm -f "$TMP"' EXIT
 
-# -f so a 404 is a failure rather than an HTML body we would happily hash
 # deliberately NOT -f: with -f curl exits non-zero and the real status is lost,
 # so a 404 would report as a generic failure. Take the code and judge it here.
 CODE="$(curl -sSL --max-time 30 -w '%{http_code}' -o "$TMP" "$URL" 2>/dev/null)" || CODE="000"
@@ -53,9 +56,30 @@ if [ "$CODE" != "200" ] || [ "$BYTES" -lt 1000 ]; then
 fi
 
 NEW_SHA="$(shasum -a 256 "$TMP" | cut -d' ' -f1)"
+
+# set -e is deliberately absent so the HTTP status can be judged explicitly, which
+# means a failing shasum would otherwise leave NEW_SHA empty and be compared
+# against the watermark - reporting CHANGED off a local tool failure.
+if [ -z "$NEW_SHA" ]; then
+  echo "status: HASH-FAILED"
+  echo "  note        : shasum produced nothing - a local tool failure, NOT a spec change"
+  exit 1
+fi
+
 NEW_VER="$(grep -oiEm1 '\*\*version[ :]+[0-9]+\.[0-9]+\*\*|okf_version:[ ]*.?[0-9]+\.[0-9]+' "$TMP" \
             | grep -oE '[0-9]+\.[0-9]+' | head -1)"
-NEW_VER="${NEW_VER:-unknown}"
+
+# An unparseable version is its own finding, never a value. Carrying "unknown"
+# forward would report a parse failure as a version change, and --update would
+# persist it into the watermark - poisoning every later comparison.
+if [ -z "$NEW_VER" ]; then
+  echo "status: PARSE-FAILED"
+  echo "  bytes       : $BYTES"
+  echo "  fetched sha : $NEW_SHA"
+  echo "  note        : fetch succeeded, no version line matched - the spec may have"
+  echo "                changed shape. Report it; do NOT --update."
+  exit 30
+fi
 
 echo "  url         : $URL"
 echo "  bytes       : $BYTES"
@@ -66,7 +90,7 @@ if [ ! -f "$WATERMARK" ]; then
   echo "status: FIRST-RUN (no watermark at $WATERMARK)"
   RC=20
 else
-  OLD_SHA="$(grep -m1 'sha256' "$WATERMARK" | awk '{print $2}')"
+  OLD_SHA="$(grep -m1 '^sha256:' "$WATERMARK" | awk '{print $2}')"
   OLD_VER="$(grep -m1 '^version' "$WATERMARK" | awk '{print $2}')"
   echo "  stored  sha : $OLD_SHA"
   echo "  stored  ver : $OLD_VER"
