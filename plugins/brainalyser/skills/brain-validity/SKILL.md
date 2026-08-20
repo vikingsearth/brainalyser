@@ -6,6 +6,8 @@ allowed-tools:
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" *)
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" *)
   - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py" *)
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh")
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh" *)
 metadata:
   author: wikus
   version: "0.3.0"
@@ -136,22 +138,49 @@ cluster tags or touch any note.
 The brain is built on the Open Knowledge Format; upstream spec changes need a
 human decision, never silent adaptation.
 
-- Fetch the canonical spec:
-  `curl -sL https://raw.githubusercontent.com/GoogleCloudPlatform/knowledge-catalog/main/okf/SPEC.md`
-  and compute its sha256.
-- Compare against `.claude/state/okf-spec.sha` (hash + the spec's version
-  line, currently "0.2"). If the file is missing, treat as first run.
+**Mechanical - run this, don't hand-roll it:**
+
+```
+bash "${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh"
+```
+
+It fetches, hashes, and compares against `.claude/state/okf-spec.sha` for you.
+Read its `status:` line:
+
+| status | exit | means |
+| --- | --- | --- |
+| `UNCHANGED` | 0 | one line in the report: "okf spec unchanged, v0.2" |
+| `CHANGED` | 10 | a real byte difference - report it prominently |
+| `FIRST-RUN` | 20 | no watermark yet |
+| `PARSE-FAILED` | 30 | fetched fine, no version line matched - the spec may have changed shape |
+| `FETCH-FAILED` | 1 | offline or moved; also a local hash failure |
+
+**Only exit 10 means the spec moved.** Every other failure carries its own status
+rather than being folded into `CHANGED`, because a false spec-change is the
+expensive direction: it is meant to halt the work. Never report `PARSE-FAILED` or
+`FETCH-FAILED` as a change, and never `--update` on either.
+
+**Do not hand-roll the hash.** The obvious spelling is wrong in a way that fails
+towards a false alarm: `SPEC=$(curl ...)` strips trailing newlines - command
+substitution always does - so hashing `"$SPEC"` gives a digest one byte short of
+the file and reports the spec as CHANGED on **every** run. That is the single
+most expensive false positive in this audit, because a real spec change is meant
+to stop the work and pull a human in. The script hashes the file on disk and
+never pipes the body through the shell.
 - **Unchanged**: one line in the report ("okf spec unchanged, v0.2").
 - **Changed**: flag it prominently - old/new version lines and a short diff
   summary of what moved (fetch, skim, summarize; do NOT adapt anything). This
   is a discussion trigger for the user, not a work item. Also check the vendored
   copy at `${CLAUDE_PLUGIN_ROOT}/skills/okf/reference/SPEC.md` and note that re-vendoring
   (see `${CLAUDE_PLUGIN_ROOT}/skills/okf/VENDORED`) is part of the eventual adaptation.
-- Update `.claude/state/okf-spec.sha` with the new hash + version and commit
-  it alongside the report - the ONE exception to report-only writes (it is
-  the watch's watermark, same pattern as harvest-state).
-- Fetch fails (offline/moved): note it and skip; if the URL 404s, flag THAT
-  (a moved spec is itself a change worth discussing).
+- Update the watermark by re-running with `--update` (it preserves `seeded:`),
+  and commit it alongside the report - the ONE exception to report-only writes
+  (it is the watch's watermark, same pattern as harvest-state). Only after the
+  change has been reported, never in the same breath as detecting it.
+- Fetch fails (offline/moved): the script exits 1 with `FETCH-FAILED` and the
+  real HTTP code - note it and skip the bucket. A 404 is itself a finding (a
+  moved spec is a change worth discussing), so never record a failed fetch as
+  "unchanged".
 
 ### 5. Report (the ONLY writes allowed)
 
@@ -213,6 +242,8 @@ to the bundle repo root.
 - `${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py` - the win->workstream
   join, derived from `Serves:` links and stored nowhere. `--orphans` lists the
   unattributed, the `Serves: none`, and any large win still owing its concept note
+- `${CLAUDE_SKILL_DIR}/scripts/okf_spec_watch.sh` - the spec
+  watch, mechanical. Byte-exact by construction; `--update` rewrites the watermark
 - `inbox/` (repo root) - where reports land
 - `${CLAUDE_PLUGIN_ROOT}/skills/brain/SKILL.md` - the capture flow that acts on
   approved findings later
