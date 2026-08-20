@@ -12,7 +12,7 @@
 - **Input**: none (window comes from the watermark in `.claude/state/harvest-state.json`)
 - **Output**: bundle concepts + log entries captured via the brain skill flow, okf validation, commits pushed, plus a short casual report (sessions scanned/skipped, candidates, concepts, log entries, dedup skips, inbox items, validation result, push status)
 - **Operations**: watermark -> discover (`scripts/discover.sh` for local; ccd session-mgmt MCP for remote/archived) -> extract candidates -> dedup (Grep over `brain/`, logs included) -> capture via the `brain` skill -> validate -> commit + push -> watermark + report
-- **External dependencies**: the `brain` skill (same repo), uv, git; ccd session-mgmt MCP optional with graceful fallback. Repo root: `$BRAIN_REPO`, default `~/dev/myMemory`
+- **External dependencies**: the `brain` skill (same plugin), uv, git; ccd session-mgmt MCP optional with graceful fallback. Repo root: `$BRAIN_REPO`, default `~/dev/myMemory`
 - **Degradation**: no session-mgmt MCP -> local-only discovery; the bundle is plain files, so capture never blocks on services
 
 ## Deviations

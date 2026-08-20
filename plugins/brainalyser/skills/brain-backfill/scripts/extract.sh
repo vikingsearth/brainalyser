@@ -3,7 +3,7 @@
 # the previous exits. Resumable: progress lives in the manifest, never inferred.
 set -uo pipefail
 
-BRAIN_REPO="${BRAIN_REPO:-$HOME/dev/myMemory}"
+BRAIN_REPO="${BRAIN_REPO:-${CLAUDE_PLUGIN_OPTION_BRAIN_REPO:-$HOME/dev/myMemory}}"
 STATE="$BRAIN_REPO/.claude/state"
 MANIFEST="$STATE/backfill-manifest.json"
 OUT="$STATE/backfill-candidates"

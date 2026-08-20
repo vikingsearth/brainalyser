@@ -2,6 +2,10 @@
 name: brain-validity
 description: Audit the brain (the user's OKF bundle) for validity - okf conformance plus reality-drift checks against GitHub and the logs - and write findings as a checkbox report in inbox/. Proposes only, never mutates. Use for the weekly-brain-validity scheduled task, or when the user asks to validity-check, audit, or lint the brain.
 compatibility: Requires uv and git; gh optional (GitHub bucket skips gracefully without auth). Repo root from $BRAIN_REPO, default ~/dev/myMemory.
+allowed-tools:
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" *)
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" *)
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py" *)
 metadata:
   author: wikus
   version: "0.3.0"
@@ -27,7 +31,7 @@ writes allowed are the report file, the okf-spec watermark, and their commits.
 
 ### 1. Conformance (mechanical)
 
-Run `uv run plugins/brainalyser/skills/validate/scripts/okf_validate.py brain --strict`
+Run `uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" brain --strict`
 from the repo root. Collect all errors and warnings (missing/invalid
 frontmatter, missing `type`, broken cross-links, reserved-file misuse).
 Broken links are spec-tolerated - report them as candidates for either writing
@@ -53,7 +57,7 @@ the missing concept or fixing a typo'd path, not as failures.
   own log.md (or the domain log) records as changed/retired - flag with both
   quotes. The log is the timeline; the note must read as current truth.
 - **Staleness and trust (mechanical - run this, don't eyeball it)**:
-  `uv run plugins/brainalyser/skills/brain/scripts/list_stale_and_unverified.py brain`
+  `uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" brain`
   from the repo root. It derives §5.5 staleness and §5.3 trust tiers under the
   one shared policy (same script the daily sweep runs), so this bucket is a date
   comparison, not a judgement call. Report:
@@ -74,7 +78,7 @@ the missing concept or fixing a typo'd path, not as failures.
     the content was confirmed but the commitment lapsed. Say so rather than
     lumping it in with never-verified notes.
 - **Win attribution and owed notes (mechanical - run this, don't eyeball it)**:
-  `uv run plugins/brainalyser/skills/brain/scripts/wins_by_stream.py brain --orphans`
+  `uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py" brain --orphans`
   from the repo root. It inverts the `Serves:` links into a per-stream roll-up.
   This is the only place the win->workstream join exists, so a gap here is
   invisible everywhere else. Report:
@@ -141,8 +145,8 @@ human decision, never silent adaptation.
 - **Changed**: flag it prominently - old/new version lines and a short diff
   summary of what moved (fetch, skim, summarize; do NOT adapt anything). This
   is a discussion trigger for the user, not a work item. Also check the vendored
-  copy at `plugins/brainalyser/skills/okf/reference/SPEC.md` and note that re-vendoring
-  (see `plugins/brainalyser/skills/okf/VENDORED`) is part of the eventual adaptation.
+  copy at `${CLAUDE_PLUGIN_ROOT}/skills/okf/reference/SPEC.md` and note that re-vendoring
+  (see `${CLAUDE_PLUGIN_ROOT}/skills/okf/VENDORED`) is part of the eventual adaptation.
 - Update `.claude/state/okf-spec.sha` with the new hash + version and commit
   it alongside the report - the ONE exception to report-only writes (it is
   the watch's watermark, same pattern as harvest-state).
@@ -195,21 +199,21 @@ items most worth acting on. No fluff.
 
 ## File References
 
-Paths starting `plugins/brainalyser/` are relative to the brain repo root and
-assume that clone also hosts this plugin's marketplace (the default setup). If
-your `$BRAIN_REPO` holds only `brain/`, the same files sit under the installed
-plugin root instead - `~/.claude/plugins/cache/<marketplace>/brainalyser/<version>/skills/...`.
+`${CLAUDE_SKILL_DIR}` is this skill's own directory and `${CLAUDE_PLUGIN_ROOT}` the
+installed plugin root; Claude Code substitutes both, so these paths resolve wherever the
+plugin lives and whatever the working directory is. Paths without a variable are relative
+to the bundle repo root.
 
-- `plugins/brainalyser/skills/validate/scripts/okf_validate.py` - the mechanical half;
+- `${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py` - the mechanical half;
   deterministic, run any time
-- `plugins/brainalyser/skills/brain/scripts/list_stale_and_unverified.py` - the other
+- `${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py` - the other
   mechanical half: §5.5 staleness + §5.3 trust tiers under the shared policy.
   The daily sweep runs the same script, so a finding here is never a
   disagreement about policy, only about what to do next
-- `plugins/brainalyser/skills/brain/scripts/wins_by_stream.py` - the win->workstream
+- `${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/wins_by_stream.py` - the win->workstream
   join, derived from `Serves:` links and stored nowhere. `--orphans` lists the
   unattributed, the `Serves: none`, and any large win still owing its concept note
 - `inbox/` (repo root) - where reports land
-- `plugins/brainalyser/skills/brain/SKILL.md` - the capture flow that acts on
+- `${CLAUDE_PLUGIN_ROOT}/skills/brain/SKILL.md` - the capture flow that acts on
   approved findings later
 - `.claude/state/okf-spec.sha` (repo root) - the spec watch watermark

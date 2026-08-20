@@ -1,10 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "brainalyser",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A shared brain your agent reads before answering and writes to after learning - recall/capture skills, cold-start init and backfill, the OKF toolchain, and two hooks that make an agent consult the bundle before making claims. Ships no knowledge itself; the bundle stays a separate git clone located via BRAIN_REPO.",
   "author": {
     "name": "Wikus Bergh"
   },
+  "homepage": "https://github.com/vikingsearth/brainalyser#readme",
+  "repository": "https://github.com/vikingsearth/brainalyser",
   "keywords": [
     "brain",
     "memory",
@@ -13,7 +16,11 @@
     "recall",
     "second-brain"
   ],
-  "skills": [
-    "./skills/"
-  ]
+  "userConfig": {
+    "brain_repo": {
+      "type": "directory",
+      "title": "Brain repo",
+      "description": "The git clone holding your brain; the bundle itself is <this>/brain. Leave empty to use $HOME/dev/myMemory - brain-init will create it and tell you if you want it elsewhere. An exported BRAIN_REPO overrides this."
+    }
+  }
 }

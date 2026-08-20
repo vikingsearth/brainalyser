@@ -4,7 +4,7 @@
 set -euo pipefail
 
 SRC="${1:-$HOME/.claude/projects}"
-BRAIN_REPO="${BRAIN_REPO:-$HOME/dev/myMemory}"
+BRAIN_REPO="${BRAIN_REPO:-${CLAUDE_PLUGIN_OPTION_BRAIN_REPO:-$HOME/dev/myMemory}}"
 
 if [ ! -d "$SRC" ]; then
   printf '{"source":"%s","exists":false,"count":0,"items":[]}\n' "$SRC"

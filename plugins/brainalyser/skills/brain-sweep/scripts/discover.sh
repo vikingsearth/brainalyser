@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
 done
 [[ "$CAP" =~ ^[0-9]+$ ]] || { echo "error: --cap needs a non-negative integer, got '$CAP' (see --help)" >&2; exit 1; }
 
-REPO="${BRAIN_REPO:-$HOME/dev/myMemory}"
+REPO="${BRAIN_REPO:-${CLAUDE_PLUGIN_OPTION_BRAIN_REPO:-$HOME/dev/myMemory}}"
 WATERMARK="$REPO/.claude/state/harvest-state.json"
 PROJECTS="$HOME/.claude/projects"
 
