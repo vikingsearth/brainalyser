@@ -1,7 +1,7 @@
 # Brain Reference
 
 Routing rules, thresholds, and conventions for the brain skill. The format
-authority is the OKF spec (`plugins/brainalyser/skills/okf/reference/SPEC.md`) - this file
+authority is the OKF spec (the plugin's `skills/okf/reference/SPEC.md`) - this file
 is the working cheat sheet for THIS bundle's layout, not a second spec.
 
 ## Repo root resolution
@@ -115,7 +115,7 @@ signal. If only part of a note checks out, leave it unverified and fix the rest.
 is how strong the claim is (`hunch`/`confirmed`/`battle-tested`); `verified` is who
 checked it and when.
 
-**`stale_after` policy** (encoded in `scripts/list_stale_and_unverified.py`, so the
+**`stale_after` policy** (encoded in this skill's `scripts/list_stale_and_unverified.py`, so the
 sweep and the audit apply it identically):
 
 | Note | `stale_after` |

@@ -22,7 +22,7 @@
 
 - **references/**
   - `REFERENCE.md` - domain map, routing rules table (signal -> route -> operation), confidence thresholds, concept/log/index conventions
-- **scripts/**: none - okf templates live in `plugins/brainalyser/skills/okf/templates/`; validation is the vendored `validate` skill
+- **scripts/**: none - okf templates live in the plugin's `skills/okf/templates/`; validation is the vendored `validate` skill
 - **assets/**: none
 
 ## Hooks (user settings.json, script in repo)

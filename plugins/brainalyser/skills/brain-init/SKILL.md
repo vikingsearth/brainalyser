@@ -2,6 +2,9 @@
 name: brain-init
 description: Create a new brain from scratch - interview the user about what they actually want to remember, scaffold an OKF bundle around their answers, and seed it with their first facts. Use when someone has no bundle yet, says set up my brain / start a second brain / I just installed brainalyser, or when BRAIN_REPO points nowhere.
 compatibility: Requires uv and git. Writes to $BRAIN_REPO (default $HOME/dev/myMemory); the bundle is $BRAIN_REPO/brain.
+allowed-tools:
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" *)
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/okf/scripts/okf_init.py" *)
 metadata:
   author: wikus
   version: "0.1.0"
@@ -83,8 +86,12 @@ On confirmation, create under `$BRAIN_REPO/brain/`:
 - one directory per agreed domain, each with an `index.md` (navigation) and `log.md` (history)
 - a root `log.md` whose first entry is dated today and marked `**Creation**`
 
-Use the `okf` skill's templates rather than inventing structure. If `okf_init.py`
-covers a step, prefer it over hand-writing.
+Use the `okf` skill's templates rather than inventing structure. Prefer its scaffolder
+over hand-writing whatever it covers:
+
+```
+uv run "${CLAUDE_PLUGIN_ROOT}/skills/okf/scripts/okf_init.py" <target-dir> [--title "..."]
+```
 
 ### 5. Seed
 
@@ -125,7 +132,7 @@ and not its owner cannot resolve "I" or "my", and that gap is invisible until it
 Run the validator from the repo root and fix anything it flags:
 
 ```
-uv run <plugin>/skills/validate/scripts/okf_validate.py brain --strict
+uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" brain --strict
 ```
 
 Then commit. Report: where the bundle is, its domains, how many concepts, and the

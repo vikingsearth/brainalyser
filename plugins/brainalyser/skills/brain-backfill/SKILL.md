@@ -2,6 +2,11 @@
 name: brain-backfill
 description: Cold-start a brain from existing material - walk a user's whole Claude Code history (or any source they point at), extract durable facts one item at a time in the background, merge the duplicates, and land the survivors as unverified proposals. Use for a one-time backfill after brain-init, or when the user says backfill / import my history / cold start my brain. Not for routine catch-up - that is brain-sweep.
 compatibility: Requires the brain skill (same plugin), the claude CLI on PATH, uv, git, and read access to the chosen source. Repo root from $BRAIN_REPO, default $HOME/dev/myMemory.
+allowed-tools:
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover-all.sh")
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover-all.sh" *)
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/extract.sh")
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/extract.sh" *)
 metadata:
   author: wikus
   version: "0.1.0"
@@ -63,7 +68,7 @@ silently produce an empty backfill.
 
 ### 2. Build the worklist
 
-`bash scripts/discover-all.sh [source-dir]` returns every candidate, oldest first, as
+`bash "${CLAUDE_SKILL_DIR}/scripts/discover-all.sh" [source-dir]` returns every candidate, oldest first, as
 JSON. Unlike sweep's discovery there is **no watermark and no cap**.
 
 Exclusions that still apply, for the same reasons sweep applies them:
@@ -79,7 +84,7 @@ Report the count and a rough time estimate before starting. Get a go-ahead.
 
 ### 3. Extract - background, sequential, one at a time
 
-`bash scripts/extract.sh` walks the manifest and runs **one** `claude` subprocess per
+`bash "${CLAUDE_SKILL_DIR}/scripts/extract.sh"` walks the manifest and runs **one** `claude` subprocess per
 item, starting the next only when the previous exits. Sequential is deliberate: a fan-out
 across hundreds of sessions will burn through the user's tokens in minutes.
 
@@ -116,7 +121,7 @@ recall-bound, not reasoning-bound.
 - `--no-session-persistence` keeps the child from writing its own transcript. Otherwise
   the backfill litters `~/.claude/projects` with N new sessions that the next `brain-sweep`
   dutifully tries to harvest - the loop feeding itself.
-- The transcript is piped in on **stdin**, pre-trimmed by `scripts/trim-transcript.py`
+- The transcript is piped in on **stdin**, pre-trimmed by `${CLAUDE_SKILL_DIR}/scripts/trim-transcript.py`
   (user and assistant text only; tool results, diffs and base64 dropped). No tools, no
   file access, no permission prompts - text in, JSON out.
 

@@ -2,6 +2,11 @@
 name: brain-sweep
 description: Harvest durable facts from recent Claude sessions and auto-memory into the brain (the user's OKF bundle) - the scheduled catch-all layer under in-session capture. Use for the daily-brain-sweep scheduled task, or when the user says sweep the brain, harvest recent/yesterday's sessions, or catch up the brain.
 compatibility: Requires the brain skill (same repo), uv, git, and read access to ~/.claude/projects. ccd session-mgmt MCP optional (graceful fallback). Repo root from $BRAIN_REPO, default ~/dev/myMemory.
+allowed-tools:
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh")
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh" *)
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" *)
+  - Bash(uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" *)
 metadata:
   author: wikus
   version: "0.3.0"
@@ -34,7 +39,7 @@ If missing, treat the window as the last 24 hours. All discovery below means
 
 ### 2. Discover
 
-- Local transcripts + auto-memory: `bash scripts/discover.sh` - returns JSON
+- Local transcripts + auto-memory: `bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh"` - returns JSON
   with transcripts and memory files since the watermark, newest first, capped
   at 10 transcripts. myMemory's own sessions are excluded (no self-referential
   loops), and so are subagent/workflow transcripts - their content belongs to
@@ -80,7 +85,7 @@ fragmenting the brain. Treat this per-note grep as mandatory, like the final
 For genuinely new facts, invoke the `brain` skill and follow its capture flow
 (routing rules, okf conventions, log + index maintenance, below-0.5
 confidence -> `inbox/`). If the skill isn't loaded in this session, read
-`plugins/brainalyser/skills/brain/SKILL.md` and its `references/REFERENCE.md` directly
+`${CLAUDE_PLUGIN_ROOT}/skills/brain/SKILL.md` and its `references/REFERENCE.md` directly
 and follow them.
 
 **Trust and freshness on every write** (full policy in the brain skill's
@@ -104,10 +109,10 @@ and follow them.
 
 ### 5. Validate, commit, push
 
-- `uv run plugins/brainalyser/skills/validate/scripts/okf_validate.py brain` - include
+- `uv run "${CLAUDE_PLUGIN_ROOT}/skills/validate/scripts/okf_validate.py" brain` - include
   errors/warnings in the report (report-only; do not fix findings you didn't
   cause this run, except conformance errors in files you just wrote).
-- `uv run plugins/brainalyser/skills/brain/scripts/list_stale_and_unverified.py brain --soon 7` -
+- `uv run "${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py" brain --soon 7` -
   report the counts, plus any note going stale within 7 days. Two of these are
   actionable in a sweep and the rest are not:
   - a **due-soon quest whose commitment this sweep just advanced** -> update its
@@ -151,16 +156,16 @@ result, freshness counts (stale / due-soon / missing `stale_after`) and any
 
 ## File References
 
-Paths starting `plugins/brainalyser/` are relative to the brain repo root and
-assume that clone also hosts this plugin's marketplace (the default setup). If
-your `$BRAIN_REPO` holds only `brain/`, the same files sit under the installed
-plugin root instead - `~/.claude/plugins/cache/<marketplace>/brainalyser/<version>/skills/...`.
+`${CLAUDE_SKILL_DIR}` is this skill's own directory and `${CLAUDE_PLUGIN_ROOT}` the
+installed plugin root; Claude Code substitutes both, so these paths resolve wherever the
+plugin lives and whatever the working directory is. Paths without a variable are relative
+to the bundle repo root.
 
-- `scripts/discover.sh` - local discovery: transcripts + auto-memory since the
+- `${CLAUDE_SKILL_DIR}/scripts/discover.sh` - local discovery: transcripts + auto-memory since the
   watermark, JSON out
-- `plugins/brainalyser/skills/brain/scripts/list_stale_and_unverified.py` - §5.5
+- `${CLAUDE_PLUGIN_ROOT}/skills/brain/scripts/list_stale_and_unverified.py` - §5.5
   staleness + §5.3 trust tiers; same script the weekly audit runs, so both apply
   one policy
-- `plugins/brainalyser/skills/brain/SKILL.md` - capture mechanics this skill
+- `${CLAUDE_PLUGIN_ROOT}/skills/brain/SKILL.md` - capture mechanics this skill
   delegates to
 - `.claude/state/harvest-state.json` (repo root, gitignored) - the watermark
