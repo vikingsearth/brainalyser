@@ -20,6 +20,15 @@ Audited against the Claude Code plugin reference; this release is that audit's o
   one runs, so an unattended routine cannot stall on a permission prompt.
 - `homepage`, `repository` and `$schema` in `plugin.json`.
 - This changelog.
+- The SessionStart hook now inlines the writing-register preferences from the bundle: the
+  `## Preference` section of every `preferences/` note tagged both `communication` and
+  `ai-tooling`. Those rules govern every sentence an agent produces, and both brain sensors
+  are keyed to named entities - the recall trigger to factual claims about a repo, project,
+  person, tool or quest, the prompt hook to entity slugs in the message - so an agent's own
+  prose style could never trigger a lookup for them. Emitted from the bundle rather than
+  copied into the hook so the two cannot drift, selected by tag so a renamed or added note
+  is picked up without editing the hook, capped at 80 lines with any truncation stated in
+  the output, and silent when no note matches.
 
 ### Changed
 - Skills now reference bundled scripts through `${CLAUDE_SKILL_DIR}` and
