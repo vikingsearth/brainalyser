@@ -7,6 +7,32 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [0.5.0] - 2026-08-20
+
+Found by running the weekly routine by hand rather than waiting for its Monday dispatch.
+
+### Added
+- `brain-validity/scripts/okf_spec_watch.sh` - the OKF spec watch is now a script instead
+  of a prose instruction. It fetches to a file, hashes the file, and reports
+  `UNCHANGED` / `CHANGED` / `FIRST-RUN` / `FETCH-FAILED` (exit 0/10/20/1). It also
+  distinguishes an in-place spec edit from a version bump - same version line, different
+  bytes - which the old wording could not express, and `--update` rewrites the watermark
+  while preserving `seeded:`.
+
+### Fixed
+- The spec watch reported the spec as changed on **every** run. Step 4 said "fetch the spec
+  and compute its sha256" and left the spelling to the reader; the obvious spelling is
+  wrong, because `SPEC=$(curl ...)` strips trailing newlines, so hashing `"$SPEC"` digests
+  one byte fewer than the file. This was the last mechanical bucket still described in
+  prose - the staleness and win-attribution buckets have been scripts precisely so they
+  cannot be got wrong by hand - and it is the most expensive false positive in the audit,
+  since a real spec change is meant to halt the work and pull a human in. Crying wolf
+  weekly teaches the reader to skip the one bucket that must not be skipped. `SKILL.md` now
+  names the anti-pattern so it does not come back.
+- `brain-validity`'s `allowed-tools` now covers the new script, so the unattended weekly run
+  cannot stall on a permission prompt for it - the failure that field was added to prevent
+  in 0.4.0.
+
 ## [0.4.0] - 2026-08-20
 
 Audited against the Claude Code plugin reference; this release is that audit's outcome.
