@@ -58,4 +58,49 @@ Brain memory is available: an OKF knowledge bundle at $BUNDLE (${COUNT:-0} conce
   All three parts are required, \`Serves:\` included - it is the only thing tying a win to the quest, project or goal it advanced, and nothing else in the bundle makes that join (the directory a win lives under carries its *area*, never its workstream). Link the quest if one covers the work, else the project, else the goal; more than one link is fine. When the win genuinely served nothing tracked, write \`Serves: none\` - explicitly, so a recorded judgement is never mistaken for a forgotten field.
   Sizes track the **outcome**, not the effort: small = a fix landed / review cleared / annoyance killed; medium = something others now rely on (a feature shipped, a gnarly bug closed, a doc or tool the team uses); large = promo-case material - the outcome changed how the team or the estate works, or is the kind of thing a career conversation gets argued from. A large win owes its own concept note next to the log (see $WINS_DIR/index.md), but that note is never a reason to log it smaller: nominate it the same day as \`**large** (note owed)\` and write the note when there is room. Unsure between two sizes -> pick the smaller, but size on what the outcome *did*, not on how hard it felt. Don't ask permission for a clear win, just mention you logged it. Never edit or delete existing entries unasked. A win entry records the win, not agent process notes - keep meta-commentary out of it.
 EOF
+
+# ------------------------------------------------------------- writing rules
+# A rule that fires on every sentence cannot live behind a lookup: the lookup
+# would have to happen before there is any reason to suspect the rule is needed.
+# The recall trigger above is scoped to factual claims about named entities, and
+# an agent's own prose style is not one - so the register notes lost on every
+# reply while sitting in the bundle marked strong and human-verified. Anything
+# applied per sentence has to be in always-loaded context, and gets inlined
+# here.
+#
+# Emitted FROM the bundle, never copied into this file - a rule held in two
+# places drifts, which is why the portfolio was retired in the first place.
+# Selected by tag, not by filename: the pair communication + ai-tooling marks a
+# note as governing how the agent itself writes, so a renamed or newly added
+# register note is picked up without editing this hook.
+PREFS="$BUNDLE/preferences"
+MAX_STYLE_LINES=80
+
+STYLE=$(
+  find "$PREFS" -maxdepth 1 -name '*.md' ! -name 'index.md' 2>/dev/null | sort | while read -r f; do
+    grep -q '^- ai-tooling$' "$f" 2>/dev/null || continue
+    grep -q '^- communication$' "$f" 2>/dev/null || continue
+    # The Preference section only - the actionable rules. Why/Applies To/Related
+    # stay behind recall; they explain the rule rather than stating it.
+    awk '
+      /^title: / && !title { title = substr($0, 8); next }
+      /^## /                { inpref = ($0 == "## Preference")
+                              if (inpref) printf "\n%s\n", title
+                              next }
+      inpref                { print }
+    ' "$f"
+  done
+)
+
+if [ -n "$STYLE" ]; then
+  n=$(printf '%s\n' "$STYLE" | wc -l | tr -d ' ')
+  if [ "$n" -gt "$MAX_STYLE_LINES" ]; then
+    STYLE=$(printf '%s\n%s\n' "$(printf '%s\n' "$STYLE" | head -n "$MAX_STYLE_LINES")" \
+      "[truncated at $MAX_STYLE_LINES lines of $n - read $PREFS for the rest]")
+  fi
+  # printf, not a heredoc: the notes contain backticks and $ that must not expand.
+  printf '\nHOW THE USER WANTS YOU TO WRITE. These apply to every sentence you produce, in replies and in anything you author, so they are stated here rather than left to recall. They are emitted from %s - to change one, edit the note, not this hook.\n%s\n' \
+    "$PREFS" "$STYLE"
+fi
+
 exit 0

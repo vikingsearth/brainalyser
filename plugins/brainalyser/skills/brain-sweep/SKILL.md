@@ -1,7 +1,7 @@
 ---
 name: brain-sweep
 description: Harvest durable facts from recent Claude sessions and auto-memory into the brain (the user's OKF bundle) - the scheduled catch-all layer under in-session capture. Use for the daily-brain-sweep scheduled task, or when the user says sweep the brain, harvest recent/yesterday's sessions, or catch up the brain.
-compatibility: Requires the brain skill (same repo), uv, git, and read access to ~/.claude/projects. ccd session-mgmt MCP optional (graceful fallback). Repo root from $BRAIN_REPO, default ~/dev/myMemory.
+compatibility: Requires the brain skill (same plugin), uv, git, and read access to ~/.claude/projects. ccd session-mgmt MCP optional (graceful fallback). Repo root from $BRAIN_REPO, default ~/dev/myMemory.
 allowed-tools:
   - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh")
   - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh" *)

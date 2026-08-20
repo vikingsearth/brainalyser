@@ -49,4 +49,5 @@ Audited against the Claude Code plugin reference; this release is that audit's o
 ### Added
 - First standalone release: the machinery split out of the private bundle repo into a
   plugin plus marketplace, with `brain-init` and `brain-backfill` so a newcomer can create
-  and cold-start a bundle. Earlier versions were not distributed.
+  and cold-start a bundle. The 0.1.x versions predate this repo and were never released
+  from it.

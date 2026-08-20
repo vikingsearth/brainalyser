@@ -25,11 +25,17 @@ per-machine, the content is versioned here.
 `brain-init` offers to do this. To do it by hand:
 
 ```bash
+PLUGIN_ROOT=$(ls -d "$HOME"/.claude/plugins/cache/*/brainalyser/*/ | sort -V | tail -1)
 for r in daily-brain-sweep weekly-brain-validity; do
   mkdir -p "$HOME/.claude/scheduled-tasks/$r"
-  cp "$CLAUDE_PLUGIN_ROOT/routines/$r/SKILL.md" "$HOME/.claude/scheduled-tasks/$r/SKILL.md"
+  cp "$PLUGIN_ROOT/routines/$r/SKILL.md" "$HOME/.claude/scheduled-tasks/$r/SKILL.md"
 done
 ```
+
+`${CLAUDE_PLUGIN_ROOT}` is only set for the plugin's own hooks and skills, not in your
+shell, so the first line finds the install instead. The cache keeps every version it has
+ever fetched side by side, which is why it takes the highest rather than the first match -
+copying from an older directory gives you a stale prompt and no error.
 
 These prompts run outside the plugin, so the **Brain repo** plugin option does not reach
 them - they read exported `BRAIN_REPO`, else the default. If your bundle is elsewhere and
