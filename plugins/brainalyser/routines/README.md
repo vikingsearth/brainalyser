@@ -31,6 +31,11 @@ for r in daily-brain-sweep weekly-brain-validity; do
 done
 ```
 
+These prompts run outside the plugin, so the **Brain repo** plugin option does not reach
+them - they read exported `BRAIN_REPO`, else the default. If your bundle is elsewhere and
+you set it through the option rather than an export, export it too or these two runs will
+work on the wrong path.
+
 Copying the file makes the task discoverable but does not schedule it. Set the
 cadence once, through the scheduled-tasks tooling or the app's UI:
 

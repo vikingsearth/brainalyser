@@ -7,7 +7,7 @@
 # Registered in ~/.claude/settings.json. Must be fast and never fail the turn.
 set -uo pipefail
 
-REPO="${BRAIN_REPO:-$HOME/dev/myMemory}"
+REPO="${BRAIN_REPO:-${CLAUDE_PLUGIN_OPTION_BRAIN_REPO:-$HOME/dev/myMemory}}"
 BUNDLE="$REPO/brain"
 CACHE="$REPO/.claude/state/brain-names.tsv"
 

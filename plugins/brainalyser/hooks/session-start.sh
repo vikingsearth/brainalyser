@@ -8,7 +8,7 @@
 # Must be fast and never fail the session.
 set -uo pipefail
 
-REPO="${BRAIN_REPO:-$HOME/dev/myMemory}"
+REPO="${BRAIN_REPO:-${CLAUDE_PLUGIN_OPTION_BRAIN_REPO:-$HOME/dev/myMemory}}"
 BUNDLE="$REPO/brain"
 
 # Guard: never resolve to the marketplace's own cached copy. The plugin is

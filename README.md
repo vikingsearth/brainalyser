@@ -90,12 +90,21 @@ has the manual steps and the cron lines.
 
 ## Configuration
 
-`BRAIN_REPO` points at the git repo holding your brain, defaulting to
-`$HOME/dev/myMemory`. The bundle itself is `$BRAIN_REPO/brain`.
+Your brain lives in its own git repo, and the plugin needs to know where. The bundle
+itself is always `<that repo>/brain`.
 
-```bash
-export BRAIN_REPO="$HOME/dev/my-brain"
-```
+Two ways to say so, highest precedence first:
+
+| | how | reaches |
+| --- | --- | --- |
+| `BRAIN_REPO` | `export BRAIN_REPO="$HOME/dev/my-brain"` | everything, including scheduled routines |
+| **Brain repo** plugin option | prompted when you enable the plugin; re-editable there | hooks and skills |
+| default `$HOME/dev/myMemory` | nothing to do | everything |
+
+The plugin option is the easy route - pick the directory once and the hooks and skills
+follow it. Export `BRAIN_REPO` instead if you want one answer everywhere: the scheduled
+routines run outside the plugin and only see the exported variable. Setting both is fine;
+the export wins.
 
 Keep the bundle in its own repo, separate from this plugin. A plugin directory is
 install-managed and overwritten on update - notes captured inside one would be silently

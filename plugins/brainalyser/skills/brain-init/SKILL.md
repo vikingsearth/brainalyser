@@ -38,8 +38,9 @@ thinks gets abandoned. Do not skip it and scaffold a default.
 
 ### 1. Locate
 
-Resolve `BRAIN_REPO` (default `$HOME/dev/myMemory`). Confirm the path with the user
-before creating anything - this is where their brain lives from now on. If the
+Resolve the repo root: exported `BRAIN_REPO`, else the **Brain repo** plugin option
+(`CLAUDE_PLUGIN_OPTION_BRAIN_REPO`), else `$HOME/dev/myMemory`. Confirm the path with the
+user before creating anything - this is where their brain lives from now on. If the
 directory is not a git repo, offer to `git init` it.
 
 ### 2. Interview
@@ -96,8 +97,10 @@ and not its owner cannot resolve "I" or "my", and that gap is invisible until it
 
 ### 6. Wire up
 
-- Tell them to set `BRAIN_REPO` if the bundle is not at the default path, and show the
-  exact export line for their shell.
+- If the bundle is not at the default path, tell them to export `BRAIN_REPO` and show the
+  exact line for their shell. The **Brain repo** plugin option is the tidier alternative
+  for hooks and skills, but only the export also reaches the two routines below - so
+  recommend the export when they are taking the routines.
 - Confirm the SessionStart hook picks the bundle up - the next session should announce it.
 - **Offer the two routines.** Without them the brain only grows when the user
   remembers to say so, and drifts unaudited. Claude Code discovers scheduled tasks
