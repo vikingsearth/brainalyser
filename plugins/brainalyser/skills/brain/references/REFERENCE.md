@@ -73,11 +73,11 @@ description: One sentence for index listings and search snippets.
 tags: [infra, gitops]
 generated:                       # §5.2 - who wrote this content, when
   by: claude-code/opus-5
-  at: '2026-08-11'
+  at: '2026-08-11T00:00:00Z'
 verified:                        # §5.2 - OPTIONAL; only when actually confirmed
   - by: human:<you>
-    at: '2026-08-11'
-stale_after: '2026-09-10'        # §5.5 - OPTIONAL; see the policy below
+    at: '2026-08-11T00:00:00Z'
+stale_after: '2026-09-10T00:00:00Z'  # §5.5 - OPTIONAL; see the policy below
 # extension keys (ours, not the spec's): role/github/team (person),
 # workstream_status (quest/project), confidence (learning), strength (preference),
 # quest_type (quest), priority, domain, source, ...
@@ -90,9 +90,9 @@ Three fields the spec defines; the *policy* for when to use them is ours.
 
 | Field | Rule |
 |---|---|
-| `generated: {by, at}` | Always. `at` = the last **meaningful content change**, so refresh it when you materially rewrite a note (not for a typo). Replaces v0.1 `timestamp`. |
+| `generated: {by, at}` | Always. `at` = the last **meaningful content change**, so refresh it when you materially rewrite a note (not for a typo). An ISO 8601 datetime with an explicit offset (§5) - `'2026-08-11T00:00:00Z'`, not `'2026-08-11'`. Replaces v0.1 `timestamp`. |
 | `verified: [{by, at}]` | Only when the content was genuinely **confirmed against its sources**. Append an entry, never overwrite - it's an audit trail. |
-| `stale_after: YYYY-MM-DD` | When to re-check. Only where truth depends on a changing world (see policy). |
+| `stale_after: '<ISO 8601 instant>'` | When to re-check, e.g. `'2026-09-23T00:00:00Z'`. Only where truth depends on a changing world (see policy). §5 requires the explicit offset on every timestamp-valued key; a date-only value now warns. |
 
 **Actors** follow §7: `human:<id>` for a person (`human:<you>`, e.g. `human:jordan`), `<producer>/<version>`
 for an agent or tool (`claude-code/opus-5`), `process:<id>` for automation
@@ -132,7 +132,11 @@ Prefer the date the note itself commits to over the default horizon: a quest say
 would otherwise hide.
 
 - Path = concept ID; slugs kebab-case; people use full-name slugs.
-- Links bundle-absolute: `[Jordan Lee](/people/team/jordan-lee.md)`.
+- Links bundle-absolute: `[Jordan Lee](/people/team/jordan-lee.md)`. The validator
+  enforces this outside `index.md`, where a directory index links its own contents
+  relatively. A relative cross-link resolves fine and still vanishes from every
+  traversal keyed on the leading slash - the visualizer and the orphan sweep - so
+  the note it sits in reads as unlinked.
   The relationship kind lives in the prose ("Works on", "Taught me", ...) -
   by convention in a `## Related` section.
 - Broken links are legal (§5.3) - not-yet-written knowledge.
