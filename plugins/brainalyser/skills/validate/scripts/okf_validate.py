@@ -10,6 +10,11 @@ Implements the §11 conformance rules verbatim:
   2. Every frontmatter block contains a non-empty `type` field.
   3. Reserved filenames (`index.md`, `log.md`) follow §8 / §9 when present.
 
+Two checks here are the bundle's conventions rather than the spec's, both
+reported as warnings: cross-links must be bundle-absolute outside `index.md`,
+and every timestamp-valued key must carry an explicit offset (§5, which the spec
+does state, but which no released validator enforced).
+
 Rules 1 and 2 are hard errors (a bundle that fails them is non-conformant).
 Everything else the spec marks as soft guidance: reported as warnings, never
 fatal unless `--strict` is given. In particular broken cross-links are NOT
@@ -42,13 +47,19 @@ RESERVED = {"index.md", "log.md"}
 RECOMMENDED = ("title", "description", "tags")
 STATUS_VALUES = {"draft", "stable", "deprecated"}
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-# RFC 3339, as the spec writes `generated.at` / `verified[].at` throughout. A
-# date-only value is tolerated: it is common in the wild and loses only precision.
-# PyYAML resolves an unquoted timestamp to a datetime whose str() separates with a
-# space, so both spellings have to pass — as with `stale_after` above.
-RFC3339 = re.compile(
-    r"^\d{4}-\d{2}-\d{2}"
-    r"(?:[Tt ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:[Zz]|[+-]\d{2}:?\d{2})?)?$")
+# §5: "Every timestamp-valued key in OKF is an ISO 8601 datetime with an explicit
+# UTC offset" (knowledge-catalog #323, vendored 2026-08-24). That covers
+# `generated.at`, `verified[].at`, `stale_after`, `sources[].last_modified` and
+# both `usage_window` bounds — one shape for all of them, so INSTANT is the only
+# timestamp matcher below and ISO_DATE survives only to name what is now too lax.
+# The offset is REQUIRED: without it an instant is not an instant, and §5.5's
+# `now >= stale_after` stops being answerable.
+# PyYAML resolves an unquoted timestamp to a datetime whose str() separates the
+# date from the time with a space and renders the offset as `+00:00`, so both the
+# quoted and unquoted spellings have to pass.
+INSTANT = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[Tt ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?"
+    r"(?:[Zz]|[+-]\d{2}:?\d{2})$")
 # §7 gives three actor shapes, and §5.1 reuses them for `sources[].author`. The
 # spec's own example (`author: team:ga4-docs`) shows the `<prefix>:<id>` family is
 # open, so this is deliberately not a whitelist — it catches the one failure that
@@ -202,9 +213,25 @@ def check_actor(value, where: str, rel: str, report: Report) -> None:
 
 
 def check_instant(value, where: str, rel: str, report: Report) -> None:
-    """§5.2 — `at` values are RFC 3339; a date-only value is tolerated."""
-    if value is not None and not RFC3339.match(str(value).strip()):
-        report.warn(rel, f"§5.2 `{where}` `{value}` is not an RFC 3339 timestamp")
+    """§5 — every timestamp-valued key is a datetime with an explicit offset.
+
+    A date-only value is the failure this catches: it reads as valid, sorts
+    correctly, and silently makes any `now >= …` comparison depend on the reader's
+    idea of when the day starts. The message names the fix rather than the rule,
+    because the fix is mechanical.
+    """
+    if value is None:
+        return
+    raw = str(value).strip()
+    if INSTANT.match(raw):
+        return
+    if ISO_DATE.match(raw):
+        report.warn(rel, f"§5 `{where}` `{raw}` is date-only; every timestamp-valued "
+                         f"key is a datetime with an explicit offset "
+                         f"(`{raw}T00:00:00Z`)")
+    else:
+        report.warn(rel, f"§5 `{where}` `{value}` is not an ISO 8601 datetime with "
+                         f"an explicit UTC offset")
 
 
 def check_trust(meta: dict, rel: str, report: Report) -> None:
@@ -247,11 +274,10 @@ def check_lifecycle(meta: dict, rel: str, report: Report) -> None:
     if status is not None and status not in STATUS_VALUES:
         report.warn(rel, f"§5.4 unknown `status` `{status}` (expected "
                          f"{'|'.join(sorted(STATUS_VALUES))})")
-    stale = meta.get("stale_after")
-    # PyYAML resolves an unquoted `2026-09-23` to a date object; str() round-trips
-    # it back to the ISO form, so both spellings check identically.
-    if stale is not None and not ISO_DATE.match(str(stale)):
-        report.warn(rel, f"§5.5 `stale_after` `{stale}` is not an absolute YYYY-MM-DD date")
+    # §5.5 respecified `stale_after` from an absolute date to an absolute instant:
+    # "A concept is stale when `now >= stale_after`". Same shape as every other
+    # timestamp-valued key, so it goes through the same check.
+    check_instant(meta.get("stale_after"), "stale_after", rel, report)
 
 
 def check_window(window, where: str, rel: str, report: Report) -> None:
@@ -265,9 +291,8 @@ def check_window(window, where: str, rel: str, report: Report) -> None:
         value = window.get(bound)
         if value is None:
             report.warn(rel, f"§5.1 `{where}` `usage_window` is missing `{bound}`")
-        elif not ISO_DATE.match(str(value)):
-            report.warn(rel, f"§5.1 `{where}` `usage_window.{bound}` `{value}` "
-                             f"is not an absolute YYYY-MM-DD date")
+        else:
+            check_instant(value, f"{where} usage_window.{bound}", rel, report)
 
 
 def check_sources(meta: dict, body: str, rel: str, report: Report) -> None:
@@ -301,9 +326,9 @@ def check_sources(meta: dict, body: str, rel: str, report: Report) -> None:
             report.warn(rel, f"§5.1 `sources[{i}].usage_count` has no `usage_window` "
                              f"framing it (a sibling of `sources`, or on the entry)")
         check_window(window, f"sources[{i}]", rel, report)
-        last_mod = src.get("last_modified")
-        if last_mod is not None and not ISO_DATE.match(str(last_mod)):
-            report.warn(rel, f"§5.1 `sources[{i}].last_modified` `{last_mod}` is not YYYY-MM-DD")
+        # §5.1 dropped its own YYYY-MM-DD constraint when §5 made every
+        # timestamp-valued key a datetime, so this is the same check as the rest.
+        check_instant(src.get("last_modified"), f"sources[{i}].last_modified", rel, report)
     # Attribution joins on the label, not on position (§5.1) — a footnote whose
     # label names no source silently attributes a claim to nothing.
     for label in sorted(set(FOOTNOTE.findall(body)) - ids):
@@ -369,8 +394,30 @@ def collect_link_targets(path: Path) -> list[str]:
     return targets
 
 
+def _as_bundle_absolute(bundle: Path, path: Path, target: str) -> str | None:
+    """The bundle-absolute spelling of a relative link, or None if it escapes."""
+    try:
+        inside = (path.parent / target).resolve().relative_to(bundle.resolve())
+    except (ValueError, OSError):
+        return None
+    return "/" + inside.as_posix()
+
+
 def check_links(bundle: Path, md_files: list[Path], report: Report) -> None:
-    """Broken bundle-internal links are warnings only (§6.1)."""
+    """Broken bundle-internal links are warnings only (§6.1).
+
+    Also enforces the bundle's own cross-link convention: a link to another
+    concept is written bundle-absolute (`/people/x.md`), not relative. The spec
+    accepts both — §6.1 only asks that a path resolve — which is exactly why it
+    drifts: a relative link resolves fine and still disappears from any traversal
+    keyed on the leading slash, so the note it sits in reads as unlinked in the
+    visualizer and in an orphan sweep. Four notes had drifted this way before the
+    check existed, one of them losing its only outbound edge.
+
+    `index.md` is exempt and deliberately so: a directory index is navigation
+    over its own contents, where relative entries are the established form (361
+    of them against 3 absolute). Everywhere else the leading slash is required.
+    """
     existing = {p.relative_to(bundle).as_posix() for p in md_files}
     for path in md_files:
         rel = path.relative_to(bundle).as_posix()
@@ -382,6 +429,11 @@ def check_links(bundle: Path, md_files: list[Path], report: Report) -> None:
                 continue
             if not t.endswith(".md"):
                 continue
+            if not t.startswith("/") and path.name != "index.md":
+                absolute = _as_bundle_absolute(bundle, path, t)
+                fix = f" (`{absolute}`)" if absolute else ""
+                report.warn(rel, f"cross-link `{target}` is relative; the bundle "
+                                 f"convention is bundle-absolute{fix}")
             if t.startswith("/"):
                 resolved = t.lstrip("/")
             else:
