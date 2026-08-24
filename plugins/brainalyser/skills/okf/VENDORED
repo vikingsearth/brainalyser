@@ -2,7 +2,11 @@ vendored from github.com/scaccogatto/okf-skills @ b33329bf87b594117833997fbeca48
   (upstream 0.6.0 - first release targeting OKF v0.2; previously b8d9b1a2 on 2026-07-21, which was v0.1)
   upstream layout moved to skills/<name>/, mapped 1:1 onto plugins/brainalyser/skills/<name>/
   (these skills lived at .claude/skills/<name>/ when first vendored; re-vendor into the plugin)
-  reference/SPEC.md is the canonical Google spec at knowledge-catalog @ 3fcbb9f8 (OKF v0.2), plus a vendoring header
+  reference/SPEC.md is the canonical Google spec at knowledge-catalog @ 62432a09 (OKF v0.2), plus a vendoring header
+  (re-vendored 2026-08-24 from 3fcbb9f8; upstream #323 made every timestamp-valued key an ISO 8601
+  datetime with an explicit offset - 43 changed lines, no version bump. SPEC.md is re-vendored on its
+  own cadence, independent of the skills code, so the okf_visualize.py patch below is untouched by it.
+  Body hash with the 9-line header stripped: 26aa5da029278939f914e578107242d9607d4f2dc5fe153272b82f9ed1030101)
 
 local patch (re-applied 2026-08-11, visualize/scripts/okf_visualize.py): layout tuning -
 nodeRepulsion 9000->400000, idealEdgeLength 90->120, min-zoomed-font-size 6->8
