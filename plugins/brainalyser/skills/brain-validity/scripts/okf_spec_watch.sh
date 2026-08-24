@@ -16,8 +16,8 @@
 #   --repo     bundle repo root; default $BRAIN_REPO, else $HOME/dev/myMemory
 #
 # Exit: 0 unchanged | 10 CHANGED (report it) | 20 first run (no watermark)
-#       30 fetched but no version line matched | 2 bad usage
-#       1 fetch or local hash failed
+#       30 fetched but no version line matched | 40 watermark write failed
+#       1 fetch failed | 11 local hash failed | 2 bad usage
 #
 # Nothing but a real byte difference exits 10. Every other failure gets its own
 # status, because a false "the spec moved" is the expensive direction here.
@@ -46,6 +46,9 @@ trap 'rm -f "$TMP"' EXIT
 CODE="$(curl -sSL --max-time 30 -w '%{http_code}' -o "$TMP" "$URL" 2>/dev/null)" || CODE="000"
 BYTES=$(wc -c < "$TMP" | tr -d ' ')
 
+# 1000 is a sanity floor, not a real length: the spec is ~37KB, and the case this
+# catches is a short error page served with a 200 (proxy notices, captive portals),
+# which would otherwise hash cleanly and read as a spec change.
 if [ "$CODE" != "200" ] || [ "$BYTES" -lt 1000 ]; then
   echo "status: FETCH-FAILED"
   echo "  url        : $URL"
@@ -63,7 +66,7 @@ NEW_SHA="$(shasum -a 256 "$TMP" | cut -d' ' -f1)"
 if [ -z "$NEW_SHA" ]; then
   echo "status: HASH-FAILED"
   echo "  note        : shasum produced nothing - a local tool failure, NOT a spec change"
-  exit 1
+  exit 11
 fi
 
 NEW_VER="$(grep -oiEm1 '\*\*version[ :]+[0-9]+\.[0-9]+\*\*|okf_version:[ ]*.?[0-9]+\.[0-9]+' "$TMP" \
@@ -76,6 +79,18 @@ if [ -z "$NEW_VER" ]; then
   echo "status: PARSE-FAILED"
   echo "  bytes       : $BYTES"
   echo "  fetched sha : $NEW_SHA"
+  # The likeliest cause of an unparseable version is upstream restructuring the
+  # spec - which means the content almost certainly moved too. Reporting only
+  # "no version line" while withholding the byte comparison buries the bigger fact.
+  if [ -f "$WATERMARK" ]; then
+    PF_OLD="$(grep -m1 '^sha256:' "$WATERMARK" | awk '{print $2}')"
+    echo "  stored  sha : $PF_OLD"
+    if [ "$NEW_SHA" = "$PF_OLD" ]; then
+      echo "  content     : UNCHANGED against the watermark - only the version line stopped matching"
+    else
+      echo "  content     : ALSO CHANGED against the watermark - treat as a spec change too"
+    fi
+  fi
   echo "  note        : fetch succeeded, no version line matched - the spec may have"
   echo "                changed shape. Report it; do NOT --update."
   exit 30
@@ -113,11 +128,19 @@ if [ "$UPDATE" -eq 1 ]; then
   SEEDED="$(grep -m1 '^seeded' "$WATERMARK" 2>/dev/null | awk '{print $2}')"
   SEEDED="${SEEDED:-$(date +%F)}"
   mkdir -p "$(dirname "$WATERMARK")"
-  { echo "sha256: $NEW_SHA"
-    echo "version: $NEW_VER"
-    echo "seeded: $SEEDED"
-    echo "updated: $(date +%F)"
-  } > "$WATERMARK"
-  echo "  watermark   : updated"
+  # Announcing the write without checking it is the same defect this script exists
+  # to remove: reporting something that is not true. A read-only watermark is the
+  # realistic case - `>` fails, and the old code still printed "updated".
+  if { echo "sha256: $NEW_SHA"
+       echo "version: $NEW_VER"
+       echo "seeded: $SEEDED"
+       echo "updated: $(date +%F)"
+     } > "$WATERMARK" 2>/dev/null && grep -q "^sha256: $NEW_SHA\$" "$WATERMARK"; then
+    echo "  watermark   : updated"
+  else
+    echo "  watermark   : WRITE-FAILED ($WATERMARK not writable or not persisted)"
+    echo "  note        : the comparison above still stands; the watermark does not"
+    exit 40
+  fi
 fi
 exit $RC

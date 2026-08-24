@@ -152,8 +152,10 @@ Read its `status:` line:
 | `UNCHANGED` | 0 | one line in the report: "okf spec unchanged, v0.2" |
 | `CHANGED` | 10 | a real byte difference - report it prominently |
 | `FIRST-RUN` | 20 | no watermark yet |
-| `PARSE-FAILED` | 30 | fetched fine, no version line matched - the spec may have changed shape |
-| `FETCH-FAILED` | 1 | offline or moved; also a local hash failure |
+| `PARSE-FAILED` | 30 | fetched fine, no version line matched - the spec may have changed shape. Says whether the bytes moved too |
+| `FETCH-FAILED` | 1 | offline, 404, or a short error page served as 200 |
+| `HASH-FAILED` | 11 | local `shasum` produced nothing - not a spec change |
+| `WRITE-FAILED` | 40 | `--update` could not persist the watermark; the comparison still stands |
 
 **Only exit 10 means the spec moved.** Every other failure carries its own status
 rather than being folded into `CHANGED`, because a false spec-change is the

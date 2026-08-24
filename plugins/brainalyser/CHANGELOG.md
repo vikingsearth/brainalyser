@@ -14,7 +14,8 @@ Found by running the weekly routine by hand rather than waiting for its Monday d
 ### Added
 - `brain-validity/scripts/okf_spec_watch.sh` - the OKF spec watch is now a script instead
   of a prose instruction. It fetches to a file, hashes the file, and reports `UNCHANGED` /
-  `CHANGED` / `FIRST-RUN` / `PARSE-FAILED` / `FETCH-FAILED` (exit 0/10/20/30/1). It also
+  `CHANGED` / `FIRST-RUN` / `PARSE-FAILED` / `FETCH-FAILED` / `HASH-FAILED` / `WRITE-FAILED`
+  (exit 0/10/20/30/1/11/40). It also
   distinguishes an in-place spec edit from a version bump - same version line, different
   bytes - which the old wording could not express, and `--update` rewrites the watermark
   while preserving `seeded:`.
@@ -24,10 +25,13 @@ Found by running the weekly routine by hand rather than waiting for its Monday d
   the expensive direction, because it is the one finding meant to halt the work.
 
 ### Fixed
-- The spec watch reported the spec as changed on **every** run. Step 4 said "fetch the spec
-  and compute its sha256" and left the spelling to the reader; the obvious spelling is
+- The spec watch could report the spec as changed when it had not. Step 4 said "fetch the
+  spec and compute its sha256" and left the spelling to the reader; the obvious spelling is
   wrong, because `SPEC=$(curl ...)` strips trailing newlines, so hashing `"$SPEC"` digests
-  one byte fewer than the file. This was the last mechanical bucket still described in
+  one byte fewer than the file. Observed once, on a manual run on 2026-08-20. The scheduled
+  run on 2026-08-24 hashed correctly and caught a genuine upstream change, so this was a
+  latent trap in the wording rather than a fault that fired every week - which is the
+  argument for a script, since whether it fires depends on which spelling the reader picks. This was the last mechanical bucket still described in
   prose - the staleness and win-attribution buckets have been scripts precisely so they
   cannot be got wrong by hand - and it is the most expensive false positive in the audit,
   since a real spec change is meant to halt the work and pull a human in. Crying wolf
@@ -48,6 +52,17 @@ Found by running the weekly routine by hand rather than waiting for its Monday d
 - The stored-hash lookup is anchored to `^sha256:`. Unanchored, any line containing the
   substring could win `-m1` - a watermark carrying a comment about `sha256` read the word
   `note` as the hash and reported a false `CHANGED`.
+- `--update` announced `watermark : updated` without checking the write landed. Against a
+  read-only watermark the redirect failed and it still reported success - the same defect
+  the script exists to remove, one level down. It now verifies the file contains the hash it
+  meant to write and exits 40 as `WRITE-FAILED` otherwise.
+- `PARSE-FAILED` withheld the byte comparison. The likeliest cause of an unparseable version
+  is upstream restructuring the spec, so the content has probably moved too; reporting only
+  "no version line matched" buried the bigger fact. It now states whether the bytes changed
+  against the watermark as well.
+- `HASH-FAILED` has its own exit (11) rather than sharing 1 with `FETCH-FAILED`, and the
+  `SKILL.md` status table now lists every status the script can emit - it was missing
+  `HASH-FAILED` entirely, so an agent reading the table would not have recognised it.
 - `--help` reads to the first blank line instead of a hardcoded line range, so editing the
   header can no longer truncate the help or spill code into it.
 
