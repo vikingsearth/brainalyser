@@ -7,7 +7,7 @@
 
 Turns three judgement calls into date and prefix comparisons:
 
-  stale        today >= stale_after                                  (OKF v0.2 §5.5)
+  stale        today >= stale_after, compared as UTC dates             (OKF v0.2 §5.5)
   due soon     stale_after within --soon days                        (§5.5)
   missing      policy says this note should carry stale_after, and it doesn't
   trust tier   derived from `verified`, never stored                 (§5.3)
@@ -31,7 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -73,16 +73,35 @@ def split_frontmatter(text: str) -> str | None:
 
 
 def as_date(value) -> date | None:
-    """Accept a real date (PyYAML resolves unquoted YYYY-MM-DD) or a string."""
+    """Reduce any OKF timestamp to the UTC calendar date it falls on.
+
+    §5 now writes every timestamp-valued key as a datetime with an explicit
+    offset, and §5.5 phrases staleness as `now >= stale_after` - an instant
+    comparison, which would make a same-day check depend on the hour the sweep
+    happens to run. This deliberately keeps the old behaviour: compare calendar
+    dates, so a note going stale today is reported as stale on every run that
+    day rather than only after some o'clock. Determinism is worth more here than
+    sub-day precision, because the consumer of this output is a weekly audit
+    that has to raise the same note twice if nothing was done about it.
+
+    An offset-aware value is converted to UTC first, so `2026-08-26T01:00:00+02:00`
+    lands on the 25th - the day it actually is in UTC - rather than on whatever
+    the string's first ten characters say.
+    """
     if isinstance(value, datetime):
-        return value.date()
+        return (value.astimezone(timezone.utc) if value.tzinfo else value).date()
     if isinstance(value, date):
         return value
     if isinstance(value, str):
+        raw = value.strip()
         try:
-            return date.fromisoformat(value.strip()[:10])
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
         except ValueError:
-            return None
+            try:
+                return date.fromisoformat(raw[:10])
+            except ValueError:
+                return None
+        return (parsed.astimezone(timezone.utc) if parsed.tzinfo else parsed).date()
     return None
 
 
@@ -176,7 +195,7 @@ def main() -> int:
                 missing.append({"path": rel, "type": ntype,
                                 "workstream_status": meta.get("workstream_status"),
                                 "suggested_horizon_days": horizon,
-                                "suggested": str(today + timedelta(days=horizon))})
+                                "suggested": f"{today + timedelta(days=horizon)}T00:00:00Z"})
         elif today >= after:
             stale.append({"path": rel, "type": ntype, "stale_after": str(after),
                           "days_overdue": (today - after).days,

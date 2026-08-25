@@ -275,15 +275,20 @@ function relList(title,arr){if(!arr.length)return'';
 // §5.3 — the trust tier is derived, never stored: no `verified` is unverified,
 // `verified` by non-`human:` actors only is machine-confirmed, and any `human:`
 // actor makes it human-reviewed. The exact lowercase prefix is the whole key.
-// §5.5 — a concept is stale when today >= stale_after; both are YYYY-MM-DD, so
-// a string compare is the whole comparison. Advisory signals, not access control.
+// §5.5 — a concept is stale when now >= stale_after. §5 writes stale_after as a
+// datetime with an offset, so it is sliced back to its UTC date before the string
+// compare: comparing "2026-08-26" against "2026-08-26T00:00:00Z" lexicographically
+// makes the shorter string smaller, which would silently stop flagging a concept
+// on the exact day it goes stale. Date granularity also keeps the badge stable for
+// the whole day rather than appearing at some o'clock. Advisory, not access control.
 const TODAY=new Date().toISOString().slice(0,10);
+const staleDay=v=>(v||'').slice(0,10);
 function trustTier(n){const v=n.verified||[];
  if(!v.length)return['t-unverified','unverified'];
  return v.some(e=>(e.by||'').startsWith('human:'))?['t-human','human-reviewed']
                                                   :['t-machine','machine-confirmed'];}
 function badges(n){const [cls,label]=trustTier(n),out=[`<span class="badge ${cls}">${label}</span>`];
- if(n.stale_after&&TODAY>=n.stale_after)out.push(`<span class="badge b-stale">stale since ${esc(n.stale_after)}</span>`);
+ if(n.stale_after&&TODAY>=staleDay(n.stale_after))out.push(`<span class="badge b-stale">stale since ${esc(staleDay(n.stale_after))}</span>`);
  if(n.status==='deprecated')out.push('<span class="badge b-deprecated">deprecated</span>');
  return `<div class="badges">${out.join('')}</div>`;}
 // OKF v0.2 trust (§5.2) + lifecycle (§5.4/§5.5). A v0.1 `timestamp` arrives here

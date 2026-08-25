@@ -34,7 +34,7 @@ thinks gets abandoned. Do not skip it and scaffold a default.
 - **Small beats complete.** Three domains they will use beats nine they will not.
   Steer to 3-5. They can add more the first time something does not fit.
 - Everything written here is `generated: {by: process:brain-init}` and **unverified**.
-  Seeds are the user's own words, so `verified: [{by: human:<id>, at: <today>}]` is
+  Seeds are the user's own words, so `verified: [{by: human:<id>, at: <today>T00:00:00Z}]` is
   legitimate on those - but only those.
 
 ## Workflow

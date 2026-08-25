@@ -91,7 +91,8 @@ and follow them.
 **Trust and freshness on every write** (full policy in the brain skill's
 `references/REFERENCE.md`):
 
-- `generated: {by: claude-code/<model>, at: <today>}` on new notes; when you
+- `generated: {by: claude-code/<model>, at: <today>T00:00:00Z}` on new notes - §5 wants
+  an explicit offset on every timestamp, and the validator warns on a date-only value; when you
   enrich an existing note in place, refresh `generated.at` too - a note whose
   body you rewrote but whose `generated.at` still reads three weeks old is the
   same drift this sweep exists to prevent.

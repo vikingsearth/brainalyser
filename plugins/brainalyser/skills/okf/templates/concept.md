@@ -7,13 +7,13 @@ tags: [<tag>, <tag>]
 status: stable                    # draft | stable | deprecated; absent means stable
 generated: { by: <actor>, at: <ISO 8601, e.g. 2026-06-14T10:00:00Z> }
 verified: { by: human:<id>, at: <ISO 8601> }   # omit until someone confirms it
-stale_after: <YYYY-MM-DD>         # omit when the content does not expire
+stale_after: <ISO 8601 instant>   # omit when the content does not expire
 sources:                          # what this was derived from; omit if nothing
   - id: <short-key>
     resource: <URL, bundle path, or scope descriptor>
     title: <Human-readable label>
     author: <actor>               # optional credibility signal
-    last_modified: <YYYY-MM-DD>   # when the source itself last changed
+    last_modified: <ISO 8601>     # when the source itself last changed
 ---
 
 <!--
