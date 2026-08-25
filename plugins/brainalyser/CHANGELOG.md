@@ -7,6 +7,67 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [0.6.0] - 2026-08-25
+
+Found by the spec watch shipped in 0.5.0, on its first scheduled run: upstream OKF moved on
+2026-08-21 and the watch caught it on 2026-08-24.
+
+### Added
+- `validate` now enforces that every timestamp-valued key carries an explicit offset. OKF
+  §5 gained a normative sentence - *"Every timestamp-valued key in OKF is an ISO 8601
+  datetime with an explicit UTC offset"* - and one matcher now covers `generated.at`,
+  `verified[].at`, `stale_after`, `sources[].last_modified` and both `usage_window` bounds.
+  `stale_after` previously had its own `YYYY-MM-DD` check and `last_modified` another; the
+  spec collapsed those into one rule and so does this.
+  The failure it catches is quiet rather than loud: a date-only value reads as valid, sorts
+  correctly, and silently makes §5.5's `now >= stale_after` depend on the reader's idea of
+  when the day starts. Reported as a warning, so `--strict` is the gate.
+- `validate` now enforces bundle-absolute cross-links outside `index.md`. The spec accepts
+  both spellings - §6.1 only asks that a path resolve - which is exactly why this drifts: a
+  relative link resolves fine and still disappears from any traversal keyed on the leading
+  slash, so the note holding it reads as unlinked in the visualizer and in an orphan sweep.
+  Four notes had drifted that way before the check existed, one of them losing its only
+  outbound edge. `index.md` is exempt deliberately - a directory index is navigation over
+  its own contents, where relative entries are the established form.
+
+### Changed
+- `okf/reference/SPEC.md` re-vendored from knowledge-catalog `3fcbb9f8` to `62432a09`
+  (upstream #323). 43 changed lines, all one theme, and **no version bump - still v0.2** -
+  so a bundle that passed yesterday still parses; it is only less precise than the spec now
+  asks for. The previously vendored body hashed to exactly the recorded watermark with its
+  9-line header stripped, which is what proves the diff is the whole upstream change with
+  nothing else mixed in. `SPEC.md` is re-vendored on its own cadence, independent of the
+  upstream skills code, so the recorded `okf_visualize.py` layout patch is untouched.
+- `list_stale_and_unverified.py` keeps comparing **calendar dates**, deliberately, now that
+  §5.5 phrases staleness as `now >= stale_after`. An instant comparison would make a
+  same-day check depend on the hour the sweep happens to run, and the consumer of this
+  output is a weekly audit that has to raise the same note twice if nothing was done about
+  it. An offset-aware value is converted to UTC first, so `2026-08-26T01:00:00+02:00` lands
+  on the 25th rather than on whatever its first ten characters say. Its suggested
+  `stale_after` is emitted as an instant, so the tool stops proposing values its own
+  validator would warn about.
+- The skills that author notes now tell their reader to write an instant: `brain-sweep`'s
+  `at: <today>`, `brain-init`'s verified seed, `okf`'s concept template, and `brain`'s
+  REFERENCE.md worked example would each have produced a value the new check flags. A
+  validator warning is only half a fix while the writers still emit the old shape.
+
+### Fixed
+- The visualizer would have silently stopped flagging a concept on the exact day it went
+  stale. It compared `TODAY` against `stale_after` as strings, and `"2026-08-26" >=
+  "2026-08-26T00:00:00Z"` is false because the shorter string sorts smaller. Both consumers
+  now slice to the UTC date. A latent trap rather than an observed failure - it required a
+  bundle that had already migrated - but it is the class of bug where the badge just never
+  appears and nobody notices its absence.
+
+### Upgrade note
+A bundle written before this release is **conformant but warns** - one warning per
+date-only timestamp. Migrating is a mechanical rewrite of frontmatter timestamp keys to
+`<date>T00:00:00Z`; midnight UTC is the reading every consumer already applied implicitly,
+so no staleness verdict changes. Do it in this order - update the plugin, then migrate the
+bundle. Reversed, the migration is checked by a validator that cannot see the thing being
+migrated, and a green `--strict` from an unpublished checker is a claim only its author can
+reproduce.
+
 ## [0.5.0] - 2026-08-20
 
 Found by running the weekly routine by hand rather than waiting for its Monday dispatch.
