@@ -122,9 +122,13 @@ and not its owner cannot resolve "I" or "my", and that gap is invisible until it
   ```
 
   Copying makes the tasks discoverable; it does not schedule them. Set the cadence
-  too - `0 8 * * *` for the sweep, `0 8 * * 1` for the validity check, local time -
-  and use a permission mode that will not stall an unattended run on a prompt.
-  Details in [routines/README.md](../../routines/README.md).
+  too - `0 8 * * *` for the sweep, `0 8 * * 1` for the validity check, local time.
+  Then have them set each routine to permission mode **Auto** and model **Opus 5.5**
+  in the app's scheduled-tasks UI. A new task starts on manual / accept edits and
+  the default model, the file cannot carry either setting, and a prompting mode
+  stalls the unattended run silently - so do not call the routines done until the
+  user confirms Auto and Opus 5.5 are set on both routines. Details in
+  [routines/README.md](../../routines/README.md).
 - Offer `brain-backfill` if they have existing material worth pulling in.
 
 ### 7. Validate and commit
