@@ -50,8 +50,19 @@ cadence once, through the scheduled-tasks tooling or the app's UI:
 | `daily-brain-sweep` | `0 8 * * *` |
 | `weekly-brain-validity` | `0 8 * * 1` |
 
-Run both under a permission mode that does not stall on prompts - an unattended
-run that blocks on a confirmation looks identical to one that finished.
+Then set the run settings on each routine. A new task starts on the app's
+defaults - a prompting permission mode (manual or accept edits) and the default
+model - which is wrong for both:
+
+| setting | value | why |
+| --- | --- | --- |
+| permission mode | **Auto** | manual and accept edits stall on the first prompt; an unattended run that blocks on a confirmation looks identical to one that finished |
+| model | **Opus 5.5** | both routines are judgement work - routing facts, sizing wins, spotting drift - where a weaker model writes plausible but misrouted notes |
+
+Neither setting lives in the `SKILL.md` file or the scheduled-tasks tooling, so
+copying the file cannot carry them. Set them per routine in the app's
+scheduled-tasks UI, once per machine. Check them again after re-creating a task -
+a fresh task starts on the defaults.
 
 ## Updating
 

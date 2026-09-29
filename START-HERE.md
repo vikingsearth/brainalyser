@@ -68,6 +68,10 @@ wrong wastes their time on instructions that cannot work where they are.
    ever audits it. They are unlikely to ask for this, because they do not yet know it is
    a thing - so it is on you to raise it. The install steps and the cron lines are in
    [`plugins/brainalyser/routines/README.md`](plugins/brainalyser/routines/README.md).
+   Installed is not configured: each routine starts on manual / accept edits and the
+   default model. Walk them through setting both to permission mode **Auto** and model
+   **Opus 5.5** in the app's scheduled-tasks UI - that is a click they make, not a file
+   you can write.
    Say what each one does in one sentence each and let them decline; do not lecture.
 
 6. If they have existing Claude Code history worth importing, mention `brain-backfill`
@@ -128,7 +132,7 @@ it is true.
 - **Do not mark anything as verified that you inferred.** An honest unverified note is
   fine; a confident wrong one poisons everything downstream.
 - **A brain with no routines is a folder they will forget.** On Path A, do not call the
-  setup finished until the daily sweep and the weekly audit are scheduled, or they have
-  actively said no to them.
+  setup finished until the daily sweep and the weekly audit are scheduled and set to
+  Auto / Opus 5.5, or they have actively said no to them.
 - **Finish by telling them the one next action**, which is usually: *"just talk to me
   normally - I will capture as we go."*

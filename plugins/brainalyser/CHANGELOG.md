@@ -7,6 +7,18 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [Unreleased]
+
+### Changed
+- Routine setup now says which run settings to use: permission mode **Auto** and model
+  **Opus 5.5**, on both `daily-brain-sweep` and `weekly-brain-validity`. A new scheduled
+  task starts on the app's defaults - manual or accept edits, and the default model - and
+  onboarding left it there because the docs only asked for "a permission mode that will
+  not stall". Neither setting lives in `SKILL.md` or the scheduled-tasks tooling, so the
+  instructions have the user set them in the app's UI. `brain-init` and `START-HERE.md`
+  no longer count setup as done until the user confirms both. The routine prompts are
+  unchanged, so there is nothing to re-copy.
+
 ## [0.6.0] - 2026-08-25
 
 Found by the spec watch shipped in 0.5.0, on its first scheduled run: upstream OKF moved on
