@@ -69,7 +69,7 @@ wrong wastes their time on instructions that cannot work where they are.
    a thing - so it is on you to raise it. The install steps and the cron lines are in
    [`plugins/brainalyser/routines/README.md`](plugins/brainalyser/routines/README.md).
    Installed is not configured: each routine starts on manual / accept edits and the
-   default model. Walk them through setting both to permission mode **Auto** and model
+   default model. Walk them through setting both routines to permission mode **Auto** and model
    **Opus 5.5** in the app's scheduled-tasks UI - that is a click they make, not a file
    you can write.
    Say what each one does in one sentence each and let them decline; do not lecture.

@@ -127,7 +127,7 @@ and not its owner cannot resolve "I" or "my", and that gap is invisible until it
   in the app's scheduled-tasks UI. A new task starts on manual / accept edits and
   the default model, the file cannot carry either setting, and a prompting mode
   stalls the unattended run silently - so do not call the routines done until the
-  user confirms both are set on both. Details in
+  user confirms Auto and Opus 5.5 are set on both routines. Details in
   [routines/README.md](../../routines/README.md).
 - Offer `brain-backfill` if they have existing material worth pulling in.
 
