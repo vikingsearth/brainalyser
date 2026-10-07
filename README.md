@@ -69,7 +69,7 @@ it, or lift the parts that help.
 
 | hook | does |
 | --- | --- |
-| `SessionStart` | announces the bundle and states the recall trigger |
+| `SessionStart` | announces the bundle, states the recall trigger, and inlines your writing rules (notes tagged `communication` + `ai-tooling`) and action rules (notes tagged `always-load`) |
 | `UserPromptSubmit` | greps the bundle for entities named in your prompt and injects what it finds |
 
 Both emit context only. Neither writes to your bundle, and neither returns a permission
