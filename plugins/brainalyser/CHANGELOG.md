@@ -7,7 +7,11 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
-## [Unreleased]
+## [0.7.0] - 2026-10-07
+
+Action rules join the writing rules in always-loaded context. Nothing to migrate and no
+routine prompts to re-copy. To use it, add `always-load` to the tags of any preference note
+whose rule must hold at the moment an action happens.
 
 ### Added
 - The SessionStart hook now inlines any preference note tagged `always-load`, under its
