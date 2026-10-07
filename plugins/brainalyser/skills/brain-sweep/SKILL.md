@@ -34,13 +34,15 @@ mirror issues/PRs for context only; never create board/tracking files.
 
 Read `.claude/state/harvest-state.json` (`{"last_run": "<ISO timestamp>"}`).
 If missing, treat the window as the last 24 hours. All discovery below means
-"modified since the watermark". The file is written again at the very end
+"active since the watermark" - judged on the timestamps inside each transcript,
+not on file mtime. The file is written again at the very end
 (step 6) - it is gitignored and per-machine, never commit it.
 
 ### 2. Discover
 
 - Local transcripts + auto-memory: `bash "${CLAUDE_SKILL_DIR}/scripts/discover.sh"` - returns JSON
-  with transcripts and memory files since the watermark, newest first, capped
+  with transcripts and memory files since the watermark, most recently active
+  first, capped
   at 10 transcripts. myMemory's own sessions are excluded (no self-referential
   loops), and so are subagent/workflow transcripts - their content belongs to
   the parent session. Report anything listed under `skipped_by_cap`.
@@ -58,9 +60,20 @@ If missing, treat the window as the last 24 hours. All discovery below means
 
 For each transcript: skim for durable facts - decisions made, learnings and
 gotchas discovered, wins landed, new people/tools/projects encountered, quest
-progress, preferences expressed. For large transcripts, spawn a subagent
-(Agent tool) to read it and return a compact structured list of candidates
-(fact, route guess, evidence) - keep the main context small. Ignore ephemeral
+progress, preferences expressed. For large transcripts, spawn **one** subagent
+(Agent tool) at a time to read it and return a compact structured list of
+candidates (fact, route guess, evidence) - keep the main context small.
+
+**One at a time, not a fleet.** A window with 50 transcripts in it reads as
+authorisation for 50 concurrent agents, and it is not: a fan-out that trips the
+session limit stops the whole session for hours and loses the work the fleet was
+doing. Finish one agent, read its result, start the next. Where the window is
+large, prefer *fewer, larger* agents - group several transcripts into one brief -
+rather than many small ones, because the limit is on concurrent sessions, not on
+work per session. If a wide fan-out genuinely looks necessary, say so and ask
+first rather than discovering the limit by hitting it.
+
+Ignore ephemeral
 content: debugging state, tool output, dead ends, point-in-time observations.
 Ignore ideas/systems the user has explicitly retired (check the relevant
 log.md files for retirement decisions before resurrecting an old concept).
@@ -149,10 +162,10 @@ result, freshness counts (stale / due-soon / missing `stale_after`) and any
 - **ccd session-mgmt MCP absent/unapproved**: local-only sweep; note the gap
   and any known-but-unreadable sessions in the report
 - **Transcript cap hit**: harvest the newest 10, list the skipped ones in the
-  report - they'll be older than the new watermark, so flag them for a manual
+  report - they'll be behind the new watermark, so flag them for a manual
   sweep rather than silently dropping them
 - **Nothing discovered**: still validate, write the watermark, and report
-- **discover.sh fails**: fall back to the inline `find` commands documented in
+- **discover.sh fails**: fall back to the inline commands documented in
   its --help; note the failure in the report
 
 ## File References

@@ -7,6 +7,63 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [0.7.1] - 2026-10-07
+
+Found by a sweep that reported a 358-transcript backlog when the real number was 119.
+Written on 2026-09-22 as 0.6.1; renumbered because 0.7.0 shipped first.
+
+### Fixed
+- `brain-sweep`'s `discover.sh` now windows transcripts on the timestamps **inside**
+  them rather than on file mtime. A `.jsonl` is appended to on every resume, so its
+  mtime records the last time the file was touched, not when the work happened - and
+  the bundle has said so since 2026-08-24 in
+  `performance/learnings/tools/session-mtime-is-not-activity-date.md`, which the
+  discovery step was not honouring.
+
+  The damage is precision, and it compounds with the cap. For a one-sided "since"
+  window mtime can only ever *over*-include - a file's mtime is never earlier than
+  its last event - so nothing was being lost here; the under-inclusion that note
+  measured is a day-bucketing failure, where a session resumed later moves out of
+  the day it was worked on. What the sweep got instead was false positives, and a
+  lot of them: measured against a 2026-09-14 watermark, 368 transcripts matched on
+  mtime and only 133 had any event at or after it. The other 239 were sessions last
+  genuinely active between 2026-07-21 and 2026-09-11, already harvested, pulled back
+  in because something reopened them. The 10-transcript cap was then spent on that
+  noise, and the run told the user it had a 358-file backlog it did not have.
+
+  Only the newest stamp in a transcript is read, because the window asks whether a
+  session has any event at or after the cutoff and that is exactly
+  `max(timestamps) >= cutoff`. Reading it is O(1) in file size rather than O(bytes):
+  JSONL is append-ordered, so the last 256 KiB carries the newest events, and a full
+  scan runs only when that tail holds no stamp at all. The whole tree - 700+ files -
+  resolves in about a second, so nothing material was traded for the accuracy. Sorting moved
+  to the same stamp, which is what makes the cap keep the genuinely newest work.
+
+  A transcript with no parseable internal timestamp falls back to its mtime and is
+  counted in `warnings` rather than dropped: a silent drop is the failure class this
+  change exists to remove, and a format change upstream should surface as a warning
+  instead of a quietly shrinking sweep. Auto-memory files stay on mtime deliberately
+  - they are rewritten in place rather than appended to on resume, so for them mtime
+  is the activity date.
+
+  The JSON output shape is unchanged (`watermark`, `window`, `transcripts`,
+  `skipped_by_cap`, `memory_files`, `summary`, `warnings`), so nothing downstream
+  moves. The `--help` inline fallback was rewritten too - it documented a
+  `find -newer` recipe that answers the mtime question this script exists to avoid. The
+  auto-memory half of that fallback keeps `find -newer` and the stamp file it needs,
+  since memory files are windowed on mtime by design.
+
+### Changed
+- `brain-sweep`'s step 3 now says to spawn **one** subagent at a time, and says why.
+  It read "for large transcripts, spawn a subagent (Agent tool)", which an agent
+  looking at a window of 50 transcripts consistently took as authorisation for 50
+  concurrent ones - the bundle records sweeps that ran six and then twelve at once
+  against a standing preference forbidding exactly that. A fan-out that trips the
+  session limit does not degrade, it stops the session for hours and loses the work
+  the fleet was doing. The step now asks for fewer, larger agents where a window is
+  big (the limit is on concurrent sessions, not on work per session) and says to ask
+  before a wide fan-out rather than discovering the limit by hitting it.
+
 ## [0.7.0] - 2026-10-07
 
 Action rules join the writing rules in always-loaded context. Nothing to migrate and no
