@@ -142,9 +142,15 @@ import datetime, json, os, re
 
 cutoff = float(os.environ["CUTOFF"])
 mtime = lambda p: os.path.getmtime(p) if os.path.exists(p) else 0
-# >= not > : a file active in the same second as the watermark stays in the window.
-# Re-reading one is free (the sweep dedups); dropping one loses it for good.
-since_cutoff = lambda paths, when: sorted((p for p in paths if when(p) >= cutoff), key=when, reverse=True)
+
+
+def since_cutoff(paths, when):
+    # Score each path once: `when` reads the file and records fallbacks.
+    scored = [(when(p), p) for p in paths]
+    # >= not > : a file active in the same second as the watermark stays in the window.
+    # Re-reading one is free (the sweep dedups); dropping one loses it for good.
+    return [p for t, p in sorted(scored, reverse=True) if t >= cutoff]
+
 
 TS_RE = re.compile(rb'"timestamp":"([^"]{19,40})"')
 TAIL_BYTES = 262144  # 256 KiB - enough to hold the last events of any real transcript
@@ -173,9 +179,9 @@ def last_activity(path):
     """Epoch of the newest event INSIDE a transcript, or None if it carries none.
 
     A .jsonl is appended to on every resume, so its mtime is the last touch, not the
-    work: an mtime window silently drops a session resumed after the watermark and
-    re-lists months-old sessions that were merely reopened. The payload carries its
-    own timestamps, so those are the evidence and mtime is at most a hint.
+    work: an mtime window re-lists months-old sessions that were merely reopened.
+    The payload carries its own timestamps, so those are the evidence and mtime is
+    at most a hint.
 
     Only the newest stamp matters here. The window asks "does this session have any
     event at or after the cutoff", which is exactly max(timestamps) >= cutoff - the
