@@ -52,6 +52,7 @@ right way for a fallback to be wrong, since the sweep dedups anyway:
   WM=$(python3 -c 'import json,os;print(json.load(open(os.path.expanduser("~/dev/myMemory/.claude/state/harvest-state.json")))["last_run"])')
   DATES=$(python3 -c 'import datetime,sys;d=datetime.date.fromisoformat(sys.argv[1][:10]);t=datetime.datetime.now(datetime.timezone.utc).date();print("|".join(str(d+datetime.timedelta(n)) for n in range((t-d).days+1)))' "$WM")
   grep -rlE "\"timestamp\":\"($DATES)T" ~/.claude/projects --include='*.jsonl' | grep -v myMemory | grep -v /subagents/
+  touch -d "$WM" /tmp/wm   # auto-memory stays on mtime, so it does need the stamp file
   find ~/.claude/projects/*/memory -name "*.md" -not -name "MEMORY.md" -not -path "*myMemory*" -newer /tmp/wm
 EOF
 }
