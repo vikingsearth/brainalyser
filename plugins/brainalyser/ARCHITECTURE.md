@@ -55,7 +55,7 @@ Claude Code discovers scheduled tasks only under `~/.claude/scheduled-tasks/` - 
 
 | hook | fires | does |
 | --- | --- | --- |
-| `SessionStart` | once per session | announces the bundle and states the recall trigger |
+| `SessionStart` | once per session | announces the bundle, states the recall trigger, and inlines the Preference section of every preference note tagged `communication` + `ai-tooling` (writing rules) or `always-load` (action rules, such as how to commit) |
 | `UserPromptSubmit` | every message, silent unless matched | greps the bundle for entities named in the prompt, injects matching lines, leads with `workstream_status` |
 
 Both are sensors: they emit context only, never return a permission decision, and never write to the bundle.

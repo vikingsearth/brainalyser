@@ -9,6 +9,14 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 
 ## [Unreleased]
 
+### Added
+- The SessionStart hook now inlines any preference note tagged `always-load`, under its
+  own heading. Before this, a rule that applies to an action - how to commit, how to open
+  a PR - stayed behind recall. An agent about to commit has no reason to look the rule up,
+  so the rule was missing at the one moment it applied. The writing rules already
+  had this treatment; the new tag extends it to action rules without having to rename
+  them as writing rules. Capped at 40 lines, because every line is paid for in every session.
+
 ### Changed
 - Routine setup now says which run settings to use: permission mode **Auto** and model
   **Opus 5.5**, on both `daily-brain-sweep` and `weekly-brain-validity`. A new scheduled

@@ -76,19 +76,23 @@ EOF
 PREFS="$BUNDLE/preferences"
 MAX_STYLE_LINES=80
 
+# The Preference section only - the actionable rules. Why/Applies To/Related
+# stay behind recall; they explain the rule rather than stating it.
+pref_rules() {
+  awk '
+    /^title: / && !title { title = substr($0, 8); next }
+    /^## /                { inpref = ($0 == "## Preference")
+                            if (inpref) printf "\n%s\n", title
+                            next }
+    inpref                { print }
+  ' "$1"
+}
+
 STYLE=$(
   find "$PREFS" -maxdepth 1 -name '*.md' ! -name 'index.md' 2>/dev/null | sort | while read -r f; do
     grep -q '^- ai-tooling$' "$f" 2>/dev/null || continue
     grep -q '^- communication$' "$f" 2>/dev/null || continue
-    # The Preference section only - the actionable rules. Why/Applies To/Related
-    # stay behind recall; they explain the rule rather than stating it.
-    awk '
-      /^title: / && !title { title = substr($0, 8); next }
-      /^## /                { inpref = ($0 == "## Preference")
-                              if (inpref) printf "\n%s\n", title
-                              next }
-      inpref                { print }
-    ' "$f"
+    pref_rules "$f"
   done
 )
 
@@ -101,6 +105,33 @@ if [ -n "$STYLE" ]; then
   # printf, not a heredoc: the notes contain backticks and $ that must not expand.
   printf '\nHOW THE USER WANTS YOU TO WRITE. These apply to every sentence you produce, in replies and in anything you author, so they are stated here rather than left to recall. They are emitted from %s - to change one, edit the note, not this hook.\n%s\n' \
     "$PREFS" "$STYLE"
+fi
+
+# ------------------------------------------------------- always-load constraints
+# Same failure as the writing rules, for rules that fire on an action rather
+# than a sentence: an agent about to commit has no reason to look up how the
+# user wants commits made, so the rule is absent at the one moment it applies.
+# A note opts in with the `always-load` tag; keep the set small, since every
+# line here is paid for in every session.
+MAX_ALWAYS_LINES=40
+
+ALWAYS=$(
+  find "$PREFS" -maxdepth 1 -name '*.md' ! -name 'index.md' 2>/dev/null | sort | while read -r f; do
+    grep -q '^- always-load$' "$f" 2>/dev/null || continue
+    # A writing note is already emitted above; emitting it twice spends this cap.
+    grep -q '^- ai-tooling$' "$f" && grep -q '^- communication$' "$f" && continue
+    pref_rules "$f"
+  done
+)
+
+if [ -n "$ALWAYS" ]; then
+  n=$(printf '%s\n' "$ALWAYS" | wc -l | tr -d ' ')
+  if [ "$n" -gt "$MAX_ALWAYS_LINES" ]; then
+    ALWAYS=$(printf '%s\n%s\n' "$(printf '%s\n' "$ALWAYS" | head -n "$MAX_ALWAYS_LINES")" \
+      "[truncated at $MAX_ALWAYS_LINES lines of $n - read $PREFS for the rest]")
+  fi
+  printf '\nHOW THE USER WANTS THINGS DONE. These apply whenever the action they name comes up - committing, opening a PR, and so on - so they are stated here rather than left to recall. They are emitted from %s - to change one, edit the note, not this hook.\n%s\n' \
+    "$PREFS" "$ALWAYS"
 fi
 
 exit 0
