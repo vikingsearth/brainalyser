@@ -26,7 +26,7 @@ to the nearest domain it does have, or to `inbox/` if nothing fits.
 | `performance/wins/<area>/` | wins - not just code (communication, leadership, voicing) | per-area `log.md` stream; every entry ends in a `Serves:` link (or explicit `Serves: none`) - the win->workstream join lives nowhere else, since the area dir carries the *area* only; **large** wins also get a concept note, nominated `**large** (note owed)` when the note lags |
 | `people/<team>/` | colleagues + stakeholders | team dirs of your choosing (e.g. `platform`, `design`, `leadership`); teamless at `people/` root |
 | `projects/<repo>/` | durable products/platforms (repo-shaped) | `project.md` + `log.md` + notes per dir |
-| `quests/<slug>/` | workstreams | `quest.md` (creation note) + `log.md` (progress) + artifact notes; workstream lifecycle is `workstream_status: active\|paused\|completed\|abandoned` (NOT `status:`, which OKF v0.2 §5.4 reserves for document lifecycle `draft\|stable\|deprecated`); `quest_type: main\|side\|errand` is the **class** (size and whose repo) and `priority: high\|normal\|low` is separate - they are NOT the same axis; at most one active quest holds `priority: high`; `quests/index.md` is sectioned Active/Completed/Abandoned, high-priority first - keep both in step on workstream_status/priority changes |
+| `quests/<slug>/` | workstreams | `quest.md` (creation note) + `log.md` (progress) + artifact notes; workstream lifecycle is `workstream_status: active\|paused\|completed\|abandoned\|archived` (`archived` = deliberately shelved and kept for reference; `abandoned` = dropped as a dead end) (NOT `status:`, which OKF v0.2 §5.4 reserves for document lifecycle `draft\|stable\|deprecated`); `quest_type: main\|side\|errand` is the **class** (size and whose repo) and `priority: high\|normal\|low` is separate - they are NOT the same axis; at most one active quest holds `priority: high`; `quests/index.md` is sectioned Active/Completed/Abandoned (archived sits with Abandoned), high-priority first - keep both in step on workstream_status/priority changes |
 | `concepts/` | portable mental models - portable across employers | flat concepts |
 | `tribal-knowledge/` | company-bound knowledge - stays behind at a job change | flat concepts |
 
@@ -123,7 +123,7 @@ sweep and the audit apply it identically):
 | active quest | the next dated commitment the note names, else +30d |
 | paused quest | +90d (revisit or abandon) |
 | active/paused project | +90d |
-| completed/abandoned quest or project | **none** - history cannot go stale |
+| completed/abandoned/archived quest or project | **none** - history cannot go stale |
 | preference, concept, goal, org | **none** - true until changed, not until a date |
 | person, tool, learning, tribal knowledge | **not automatic** - add one only when the note names a pending change worth chasing (a role about to change, a version pin expected to move, a live-config claim) |
 

@@ -126,7 +126,7 @@ def policy_horizon(meta: dict) -> int | None:
         return None
     ws = meta.get("workstream_status")
     ws = str(ws).strip() if ws is not None else None
-    if ntype in {"quest", "project"} and ws in {"completed", "abandoned"}:
+    if ntype in {"quest", "project"} and ws in {"completed", "abandoned", "archived"}:
         return None  # history cannot go stale
     for (t, want_ws), days in POLICY.items():
         if t == ntype and (want_ws is None or want_ws == ws):
