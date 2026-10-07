@@ -165,7 +165,7 @@ result, freshness counts (stale / due-soon / missing `stale_after`) and any
   report - they'll be behind the new watermark, so flag them for a manual
   sweep rather than silently dropping them
 - **Nothing discovered**: still validate, write the watermark, and report
-- **discover.sh fails**: fall back to the inline `find` commands documented in
+- **discover.sh fails**: fall back to the inline commands documented in
   its --help; note the failure in the report
 
 ## File References
