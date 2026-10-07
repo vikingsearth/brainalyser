@@ -118,6 +118,8 @@ MAX_ALWAYS_LINES=40
 ALWAYS=$(
   find "$PREFS" -maxdepth 1 -name '*.md' ! -name 'index.md' 2>/dev/null | sort | while read -r f; do
     grep -q '^- always-load$' "$f" 2>/dev/null || continue
+    # A writing note is already emitted above; emitting it twice spends this cap.
+    grep -q '^- ai-tooling$' "$f" && grep -q '^- communication$' "$f" && continue
     pref_rules "$f"
   done
 )
