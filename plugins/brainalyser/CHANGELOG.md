@@ -7,6 +7,22 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [0.7.2] - 2026-10-07
+
+A patch, not a minor: bundles already carry this value, so the release brings the docs in line
+with them rather than adding vocabulary. Nothing to migrate and no routine prompts to re-copy.
+
+### Fixed
+- `workstream_status` now lists `archived` alongside `active|paused|completed|abandoned`.
+  Bundles were already using it for a project shelved on purpose and kept for reference,
+  but `REFERENCE.md` did not list it, so an agent following the reference could "correct"
+  it to `paused` or `abandoned` and lose the distinction: `archived` is kept on purpose,
+  `abandoned` is a dead end. `quests/index.md` files `archived` with Abandoned.
+- `list_stale_and_unverified.py` treats `archived` as terminal, like `completed` and
+  `abandoned` - history cannot go stale. Output is unchanged: no policy row ever matched
+  `archived`, so it already got no horizon. The short-circuit makes that deliberate rather
+  than accidental, and the brain-validity skill's status note lists the value too.
+
 ## [0.7.1] - 2026-10-07
 
 Found by a sweep that reported a 358-transcript backlog when the real number was 119.
