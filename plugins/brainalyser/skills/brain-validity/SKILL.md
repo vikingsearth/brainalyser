@@ -53,7 +53,7 @@ the missing concept or fixing a typo'd path, not as failures.
   trusting the state. If gh auth fails, note it and skip gracefully.
 - **Status coherence**: quests marked active whose parent project is paused
   (check the linked project.md's `workstream_status:`) - flag for confirm.
-  Note `workstream_status` is ours (active/paused/completed/abandoned); `status`
+  Note `workstream_status` is ours (active/paused/completed/abandoned/archived); `status`
   is OKF v0.2 §5.4 document lifecycle (draft/stable/deprecated) - different axis.
 - **Note-vs-log contradiction**: concepts whose body asserts something their
   own log.md (or the domain log) records as changed/retired - flag with both
