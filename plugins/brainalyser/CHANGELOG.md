@@ -7,6 +7,16 @@ After upgrading, re-copy the routine prompts if this file says they changed - th
 `~/.claude/scheduled-tasks/` are snapshots and a plugin update does not refresh them. See
 [routines/README.md](routines/README.md).
 
+## [Unreleased]
+
+### Fixed
+- `REFERENCE.md` routing gains a **lifecycle test** (only work that ends is a quest) and an
+  **instance test** (run the portable-vs-company test per part, so a technique described
+  through company examples splits into a concept plus an instance note). Without them an
+  ongoing practice was routed to `quests/` because that was the only home for "something I
+  do", and a portable technique was filed as tribal knowledge because its examples were
+  company-bound.
+
 ## [0.7.2] - 2026-10-07
 
 A patch, not a minor: bundles already carry this value, so the release brings the docs in line

@@ -35,6 +35,7 @@ to the nearest domain it does have, or to `inbox/` if nothing fits.
 | Signal in input | Route | Operation |
 |---|---|---|
 | "working on...", "starting...", "new task..." | `quests/<slug>/` | create `quest.md` (+ `log.md`), add to quests index |
+| an ongoing practice that never ends (a recurring one-on-one, a team ritual, a technique in use) | **not** `quests/` - the technique to `concepts/`, the user's own record of doing it to `performance/`, a company-specific instance to `tribal-knowledge/` | create/update concept; split per the instance test below |
 | progress on existing work ("done with...", "blocked on...", "merged...") | the quest's `log.md` | append dated entry; flip `workstream_status:` in quest.md when it changes |
 | "found that...", "discovered...", "TIL...", caveats | `performance/learnings/<topic>/` | create learning concept; new topic dirs are fine (2+ notes rule of thumb) |
 | a win (shipped, solved, unblocked, grew - any area) | `performance/wins/<area>/log.md` | append dated entry with **small**/**medium**/**large** marker sized on the *outcome* not the effort, ending in a required `Serves:` link to the quest/project/goal it advanced (or `Serves: none`); large also owes a concept note - nominate as `**large** (note owed)` rather than downgrading |
@@ -52,6 +53,16 @@ next employer? Yes -> `concepts/` or a learning. No (it's about your employer's
 structure, products, people, or instances) -> `tribal-knowledge/`,
 except operational learnings which stay in `performance/learnings/` regardless
 (the learning is the durable part; tag company specifics inline).
+
+Lifecycle test, before routing anything to `quests/`: does it end? A quest is a
+workstream that reaches `completed`, `abandoned` or `archived`. Something that
+just keeps going is a practice, not a quest, however much work it holds.
+
+Instance test: run the portable-vs-company test on each **part** of the input,
+not on the note as a whole. A portable technique described through company
+examples (our team's chain, a colleague's template) is two things - the
+technique goes to `concepts/`, the instance to `tribal-knowledge/`, and each
+links to the other. Never let the examples decide where the idea lives.
 
 ## Confidence thresholds
 
