@@ -74,7 +74,7 @@ Never build board/tracking files; indexes are listings, not state.
 - **Target concept doesn't exist during an update**: create it (okf templates at `${CLAUDE_PLUGIN_ROOT}/skills/okf/templates/`), then apply the update
 - **Link target missing**: keep the link - the spec tolerates broken links as not-yet-written knowledge (§5.3); create the target if the entity matters
 - **New domain or subdomain needed**: propose it to the user first - the domain layout is a design surface, not an extraction detail
-- **Fact is company-bound vs portable**: company-bound knowledge (org structure, operators, internal maps - anything that stays behind at job change) goes to `tribal-knowledge/`; portable mental models go to `concepts/`
+- **Fact is company-bound vs portable**: company-bound knowledge (org structure, operators, internal maps - anything that stays behind at job change) goes to `tribal-knowledge/`; portable mental models go to `concepts/`; a note that mixes both is split per part (see the instance test in [references/REFERENCE.md](references/REFERENCE.md))
 
 ## File References
 
